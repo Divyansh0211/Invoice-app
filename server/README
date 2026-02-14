@@ -1,0 +1,15 @@
+# Server Side
+
+This directory contains the backend code for the Invoice App.
+
+## Getting Started
+
+1.  Install dependencies:
+    ```bash
+    npm install
+    ```
+
+2.  Run the server:
+    ```bash
+    npm start
+    ```
