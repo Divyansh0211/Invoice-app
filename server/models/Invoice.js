@@ -16,6 +16,16 @@ const InvoiceSchema = new mongoose.Schema({
     businessName: {
         type: String
     },
+    businessGST: {
+        type: String
+    },
+    clientGST: {
+        type: String
+    },
+    gstRate: {
+        type: Number,
+        default: 0
+    },
     items: [
         {
             description: String,
@@ -32,6 +42,24 @@ const InvoiceSchema = new mongoose.Schema({
         enum: ['Paid', 'Pending', 'Overdue'],
         default: 'Pending'
     },
+    payments: [
+        {
+            amount: {
+                type: Number,
+                required: true
+            },
+            date: {
+                type: Date,
+                default: Date.now
+            },
+            method: {
+                type: String
+            },
+            note: {
+                type: String
+            }
+        }
+    ],
     date: {
         type: Date,
         default: Date.now

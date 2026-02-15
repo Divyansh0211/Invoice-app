@@ -176,3 +176,21 @@ img {
 .my-1 {
   margin: 1rem 0;
 }
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2rem;
+}
+
+@media (max-width: 700px) {
+    .grid-2, .grid-3 {
+        grid-template-columns: 1fr;
+    }
+}

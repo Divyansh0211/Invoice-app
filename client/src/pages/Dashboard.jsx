@@ -61,6 +61,7 @@ const Dashboard = () => {
                             <p>Total: ${invoice.total}</p>
                             <p>Status: <span className={`badge ${invoice.status === 'Paid' ? 'badge-success' : 'badge-danger'}`}>{invoice.status}</span></p>
                             <div className="card-actions">
+                                <Link to={`/invoice/${invoice._id}`} className="btn btn-secondary">View</Link>
                                 <Link to={`/edit-invoice/${invoice._id}`} className="btn btn-dark">Edit</Link>
                                 <button onClick={() => deleteInvoice(invoice._id)} className="btn btn-danger">Delete</button>
                             </div>

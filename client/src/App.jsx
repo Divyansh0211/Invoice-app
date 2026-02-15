@@ -5,6 +5,10 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import InvoiceForm from './pages/InvoiceForm';
+import InvoiceDetails from './pages/InvoiceDetails';
+import Customers from './pages/Customers';
+import Products from './pages/Products';
+import Reports from './pages/Reports';
 import './index.css';
 
 function App() {
@@ -20,6 +24,10 @@ function App() {
               <Route path="/signup" element={<Signup />} />
               <Route path="/create-invoice" element={<InvoiceForm />} />
               <Route path="/edit-invoice/:id" element={<InvoiceForm />} />
+              <Route path="/invoice/:id" element={<InvoiceDetails />} />
+              <Route path="/customers" element={<Customers />} />
+              <Route path="/products" element={<Products />} />
+              <Route path="/reports" element={<Reports />} />
             </Routes>
           </div>
         </div>

@@ -15,10 +15,13 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/invoices', require('./routes/invoices'));
+app.use('/api/customers', require('./routes/customers'));
+app.use('/api/products', require('./routes/products'));
+app.use('/api/reports', require('./routes/reports'));
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI)
-.then(() => console.log('MongoDB connected'))
-.catch(err => console.log(err));
+    .then(() => console.log('MongoDB connected'))
+    .catch(err => console.log(err));
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
