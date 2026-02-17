@@ -16,21 +16,6 @@ const Navbar = () => {
                 Hello, {user && user.name} <span style={{ fontSize: '0.8rem', background: '#28a745', color: 'white', padding: '2px 5px', borderRadius: '5px', marginLeft: '5px' }}>Cloud Synced <i className="fas fa-check-circle"></i></span>
             </li>
             <li>
-                <Link to="/">Dashboard</Link>
-            </li>
-            <li>
-                <Link to="/customers">Customers</Link>
-            </li>
-            <li>
-                <Link to="/products">Products</Link>
-            </li>
-            <li>
-                <Link to="/reports">Reports</Link>
-            </li>
-            <li>
-                <Link to="/create-invoice" className="btn btn-create btn-sm">Create Invoice</Link>
-            </li>
-            <li>
                 <a onClick={onLogout} href="#!">
                     <i className="fas fa-sign-out-alt"></i> <span className="hide-sm">Logout</span>
                 </a>

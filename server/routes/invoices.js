@@ -22,7 +22,7 @@ router.get('/', auth, async (req, res) => {
 // @desc    Add new invoice
 // @access  Private
 router.post('/', auth, async (req, res) => {
-    const { clientName, clientEmail, businessName, businessGST, clientGST, items, gstRate, total, status } = req.body;
+    const { clientName, clientEmail, businessName, businessGST, clientGST, items, gstRate, total, status, dueDate } = req.body;
 
     try {
         const newInvoice = new Invoice({
@@ -35,6 +35,7 @@ router.post('/', auth, async (req, res) => {
             gstRate,
             total,
             status,
+            dueDate,
             user: req.user.id
         });
 
@@ -50,7 +51,7 @@ router.post('/', auth, async (req, res) => {
 // @desc    Update invoice
 // @access  Private
 router.put('/:id', auth, async (req, res) => {
-    const { clientName, clientEmail, businessName, businessGST, clientGST, items, gstRate, total, status } = req.body;
+    const { clientName, clientEmail, businessName, businessGST, clientGST, items, gstRate, total, status, dueDate } = req.body;
 
     // Build invoice object
     const invoiceFields = {};
@@ -63,6 +64,7 @@ router.put('/:id', auth, async (req, res) => {
     if (gstRate !== undefined) invoiceFields.gstRate = gstRate;
     if (total) invoiceFields.total = total;
     if (status) invoiceFields.status = status;
+    if (dueDate) invoiceFields.dueDate = dueDate;
 
     try {
         let invoice = await Invoice.findById(req.params.id);

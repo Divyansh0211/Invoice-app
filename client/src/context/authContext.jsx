@@ -89,6 +89,26 @@ export const AuthProvider = ({ children }) => {
 
         try {
             const res = await axios.post('/api/auth/signup', formData, config);
+            return { success: true, msg: res.data.msg };
+        } catch (err) {
+            dispatch({
+                type: 'REGISTER_FAIL',
+                payload: err.response && err.response.data && err.response.data.msg ? err.response.data.msg : 'Registration failed'
+            });
+            return { success: false };
+        }
+    };
+
+    // Verify OTP
+    const verifyOtp = async formData => {
+        const config = {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        };
+
+        try {
+            const res = await axios.post('/api/auth/verify-otp', formData, config);
 
             localStorage.setItem('token', res.data.token);
             setAuthToken(res.data.token);
@@ -99,11 +119,32 @@ export const AuthProvider = ({ children }) => {
             });
 
             loadUser();
+            return { success: true };
         } catch (err) {
             dispatch({
                 type: 'REGISTER_FAIL',
-                payload: err.response && err.response.data && err.response.data.msg ? err.response.data.msg : 'Registration failed'
+                payload: err.response && err.response.data && err.response.data.msg ? err.response.data.msg : 'Verification failed'
             });
+            return { success: false };
+        }
+    };
+
+    // Resend OTP
+    const resendOtp = async email => {
+        const config = {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        };
+
+        try {
+            const res = await axios.post('/api/auth/resend-otp', { email }, config);
+            return { success: true, msg: res.data.msg };
+        } catch (err) {
+            return {
+                success: false,
+                msg: err.response && err.response.data && err.response.data.msg ? err.response.data.msg : 'Resend failed'
+            };
         }
     };
 
@@ -136,6 +177,32 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // Update Profile
+    const updateProfile = async formData => {
+        const config = {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        };
+
+        try {
+            const res = await axios.put('/api/auth/profile', formData, config);
+
+            dispatch({
+                type: 'USER_LOADED',
+                payload: res.data
+            });
+
+            return { success: true };
+        } catch (err) {
+            dispatch({
+                type: 'AUTH_ERROR',
+                payload: err.response && err.response.data && err.response.data.msg ? err.response.data.msg : 'Update failed'
+            });
+            return { success: false };
+        }
+    };
+
     // Logout
     const logout = () => dispatch({ type: 'LOGOUT' });
 
@@ -154,7 +221,10 @@ export const AuthProvider = ({ children }) => {
                 login,
                 logout,
                 clearErrors,
-                loadUser
+                loadUser,
+                verifyOtp,
+                resendOtp,
+                updateProfile
             }}
         >
             {children}

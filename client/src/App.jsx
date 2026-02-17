@@ -1,5 +1,7 @@
+import { useContext, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/authContext';
+import AuthContext from './context/authContext';
 import Navbar from './components/Navbar';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -11,27 +13,57 @@ import Products from './pages/Products';
 import Reports from './pages/Reports';
 import './index.css';
 
-function App() {
+import Sidebar from './components/Sidebar';
+import Settings from './pages/Settings';
+import PrivateRoute from './components/PrivateRoute';
+
+const AppContent = () => {
+  const { user } = useContext(AuthContext);
+
+  useEffect(() => {
+    if (user) {
+      console.log('App: User settings:', user.settings);
+    }
+    if (user && user.settings && user.settings.themeColor) {
+      console.log('App: Applying theme color:', user.settings.themeColor);
+      document.documentElement.style.setProperty('--primary-color', user.settings.themeColor);
+    }
+  }, [user]);
+
   return (
-    <AuthProvider>
-      <Router>
-        <div className="app-container">
-          <Navbar />
+    <Router>
+      <div className="app-container">
+        <Navbar />
+        <div className="main-content">
+          <Sidebar />
           <div className="container">
             <Routes>
-              <Route path="/" element={<Dashboard />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
-              <Route path="/create-invoice" element={<InvoiceForm />} />
-              <Route path="/edit-invoice/:id" element={<InvoiceForm />} />
-              <Route path="/invoice/:id" element={<InvoiceDetails />} />
-              <Route path="/customers" element={<Customers />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/reports" element={<Reports />} />
+
+              {/* Protected Routes */}
+              <Route element={<PrivateRoute />}>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/create-invoice" element={<InvoiceForm />} />
+                <Route path="/edit-invoice/:id" element={<InvoiceForm />} />
+                <Route path="/invoice/:id" element={<InvoiceDetails />} />
+                <Route path="/customers" element={<Customers />} />
+                <Route path="/products" element={<Products />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/settings" element={<Settings />} />
+              </Route>
             </Routes>
           </div>
         </div>
-      </Router>
+      </div>
+    </Router>
+  );
+};
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
     </AuthProvider>
   );
 }

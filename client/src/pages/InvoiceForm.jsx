@@ -20,13 +20,14 @@ const InvoiceForm = () => {
         gstRate: 0,
         status: 'Pending',
         currency: 'USD',
+        dueDate: '',
         items: [{ description: '', quantity: 1, price: 0 }]
     });
 
     const [customers, setCustomers] = useState([]);
     const [products, setProducts] = useState([]);
 
-    const { clientName, clientEmail, businessName, businessGST, clientGST, gstRate, status, currency, items } = invoice;
+    const { clientName, clientEmail, businessName, businessGST, clientGST, gstRate, status, currency, dueDate, items } = invoice;
 
     useEffect(() => {
         if (id) {
@@ -41,6 +42,10 @@ const InvoiceForm = () => {
             const res = await axios.get(`/api/invoices`);
             const foundInvoice = res.data.find(inv => inv._id === invoiceId);
             if (foundInvoice) {
+                // Format date for input type="date"
+                if (foundInvoice.dueDate) {
+                    foundInvoice.dueDate = foundInvoice.dueDate.split('T')[0];
+                }
                 setInvoice(foundInvoice);
             }
         } catch (err) {
@@ -212,6 +217,13 @@ const InvoiceForm = () => {
                     </div>
                 </div>
 
+                <div className="grid-2">
+                    <div className="form-group">
+                        <label>Due Date</label>
+                        <input type="date" name="dueDate" value={dueDate} onChange={onChange} />
+                    </div>
+                </div>
+
                 <div className="grid-3">
                     <div className="form-group">
                         <label>Business GST (Optional)</label>
@@ -327,8 +339,8 @@ const InvoiceForm = () => {
                 </div>
 
                 <input type="submit" value={id ? 'Update Invoice' : 'Create Invoice'} className="btn btn-primary btn-block" />
-            </form>
-        </div>
+            </form >
+        </div >
     );
 };
 
