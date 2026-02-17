@@ -28,7 +28,7 @@ const Navbar = () => {
                 <Link to="/reports">Reports</Link>
             </li>
             <li>
-                <Link to="/create-invoice" className="btn btn-sm">Create Invoice</Link>
+                <Link to="/create-invoice" className="btn btn-create btn-sm">Create Invoice</Link>
             </li>
             <li>
                 <a onClick={onLogout} href="#!">
