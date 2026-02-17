@@ -26,6 +26,10 @@ const InvoiceSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    currency: {
+        type: String,
+        default: 'USD'
+    },
     items: [
         {
             description: String,

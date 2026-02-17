@@ -50,7 +50,7 @@ const Dashboard = () => {
             <p className="lead">
                 <i className="fas fa-user"></i> Welcome
             </p>
-            <Link to="/create-invoice" className="btn btn-primary my-1">Create Invoice</Link>
+            <Link to="/create-invoice" className="btn btn-create my-1">Create Invoice</Link>
             {invoices.length > 0 ? (
                 <div className="invoice-grid">
                     {invoices.map(invoice => (
@@ -58,7 +58,7 @@ const Dashboard = () => {
                             <h3>{invoice.clientName}</h3>
                             {invoice.businessName && <p><strong>Business:</strong> {invoice.businessName}</p>}
                             <p>{invoice.clientEmail}</p>
-                            <p>Total: ${invoice.total}</p>
+                            <p>Total: {invoice.currency ? invoice.currency : '$'} {invoice.total}</p>
                             <p>Status: <span className={`badge ${invoice.status === 'Paid' ? 'badge-success' : 'badge-danger'}`}>{invoice.status}</span></p>
                             <div className="card-actions">
                                 <Link to={`/invoice/${invoice._id}`} className="btn btn-secondary">View</Link>

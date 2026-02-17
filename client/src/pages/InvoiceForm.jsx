@@ -19,13 +19,14 @@ const InvoiceForm = () => {
         clientGST: '',
         gstRate: 0,
         status: 'Pending',
+        currency: 'USD',
         items: [{ description: '', quantity: 1, price: 0 }]
     });
 
     const [customers, setCustomers] = useState([]);
     const [products, setProducts] = useState([]);
 
-    const { clientName, clientEmail, businessName, businessGST, clientGST, gstRate, status, items } = invoice;
+    const { clientName, clientEmail, businessName, businessGST, clientGST, gstRate, status, currency, items } = invoice;
 
     useEffect(() => {
         if (id) {
@@ -221,46 +222,61 @@ const InvoiceForm = () => {
                         <input type="text" name="clientGST" value={clientGST} onChange={onChange} placeholder="Client GSTIN" />
                     </div>
                     <div className="form-group">
+                        <label>Currency</label>
+                        <select name="currency" value={currency} onChange={onChange}>
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="GBP">GBP (£)</option>
+                            <option value="INR">INR (₹)</option>
+                            <option value="JPY">JPY (¥)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div className="grid-2">
+                    <div className="form-group">
                         <label>GST Rate (%)</label>
                         <input type="number" name="gstRate" value={gstRate} onChange={onChange} min="0" step="0.1" />
                     </div>
                 </div>
 
                 <h3>Items</h3>
-                {items.map((item, index) => (
-                    <div key={index} className="item-row my-1" style={{ display: 'flex', gap: '10px' }}>
-                        <input
-                            type="text"
-                            name="description"
-                            placeholder="Description"
-                            value={item.description}
-                            onChange={(e) => onItemChange(e, index)}
-                            required
-                            style={{ flex: 3 }}
-                        />
-                        <input
-                            type="number"
-                            name="quantity"
-                            placeholder="Qty"
-                            value={item.quantity}
-                            onChange={(e) => onItemChange(e, index)}
-                            required
-                            min="1"
-                            style={{ flex: 1 }}
-                        />
-                        <input
-                            type="number"
-                            name="price"
-                            placeholder="Price"
-                            value={item.price}
-                            onChange={(e) => onItemChange(e, index)}
-                            required
-                            min="0"
-                            style={{ flex: 1 }}
-                        />
-                        <button type="button" onClick={() => removeItem(index)} className="btn btn-danger">x</button>
-                    </div>
-                ))}
+                {
+                    items.map((item, index) => (
+                        <div key={index} className="item-row my-1" style={{ display: 'flex', gap: '10px' }}>
+                            <input
+                                type="text"
+                                name="description"
+                                placeholder="Description"
+                                value={item.description}
+                                onChange={(e) => onItemChange(e, index)}
+                                required
+                                style={{ flex: 3 }}
+                            />
+                            <input
+                                type="number"
+                                name="quantity"
+                                placeholder="Qty"
+                                value={item.quantity}
+                                onChange={(e) => onItemChange(e, index)}
+                                required
+                                min="1"
+                                style={{ flex: 1 }}
+                            />
+                            <input
+                                type="number"
+                                name="price"
+                                placeholder="Price"
+                                value={item.price}
+                                onChange={(e) => onItemChange(e, index)}
+                                required
+                                min="0"
+                                style={{ flex: 1 }}
+                            />
+                            <button type="button" onClick={() => removeItem(index)} className="btn btn-danger">x</button>
+                        </div>
+                    ))
+                }
                 <button type="button" onClick={addItem} className="btn btn-light my-1">+ Add Item</button>
 
                 <div id="invoice-preview" style={{ padding: '20px', border: '1px solid #ccc', margin: '20px 0', background: '#fff', color: '#333' }}>
@@ -295,17 +311,18 @@ const InvoiceForm = () => {
                                 <tr key={index} style={{ borderBottom: '1px solid #eee' }}>
                                     <td style={{ padding: '10px' }}>{item.description}</td>
                                     <td style={{ padding: '10px' }}>{item.quantity}</td>
-                                    <td style={{ padding: '10px' }}>${item.price}</td>
-                                    <td style={{ padding: '10px' }}>${item.quantity * item.price}</td>
+
+                                    <td style={{ padding: '10px' }}>{currency} {item.price}</td>
+                                    <td style={{ padding: '10px' }}>{currency} {item.quantity * item.price}</td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
 
                     <div style={{ textAlign: 'right' }}>
-                        <p>Subtotal: ${calculateSubTotal()}</p>
-                        <p>GST ({gstRate}%): ${((calculateSubTotal() * gstRate) / 100).toFixed(2)}</p>
-                        <h3>Total: ${calculateTotal().toFixed(2)}</h3>
+                        <p>Subtotal: {currency} {calculateSubTotal()}</p>
+                        <p>GST ({gstRate}%): {currency} {((calculateSubTotal() * gstRate) / 100).toFixed(2)}</p>
+                        <h3>Total: {currency} {calculateTotal().toFixed(2)}</h3>
                     </div>
                 </div>
 

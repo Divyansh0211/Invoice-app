@@ -115,8 +115,8 @@ const InvoiceDetails = () => {
                                     <tr key={index} style={{ borderBottom: '1px solid #eee' }}>
                                         <td style={{ padding: '10px' }}>{item.description}</td>
                                         <td style={{ padding: '10px' }}>{item.quantity}</td>
-                                        <td style={{ padding: '10px' }}>${item.price}</td>
-                                        <td style={{ padding: '10px' }}>${item.quantity * item.price}</td>
+                                        <td style={{ padding: '10px' }}>{invoice.currency} {item.price}</td>
+                                        <td style={{ padding: '10px' }}>{invoice.currency} {item.quantity * item.price}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -129,11 +129,11 @@ const InvoiceDetails = () => {
                                We stored gstRate in Invoice! 
                            */}
                             {invoice.gstRate > 0 &&
-                                <p>GST ({invoice.gstRate}%): ${((invoice.total / (1 + invoice.gstRate / 100)) * (invoice.gstRate / 100)).toFixed(2)} (Approx)</p>
+                                <p>GST ({invoice.gstRate}%): {invoice.currency} {((invoice.total / (1 + invoice.gstRate / 100)) * (invoice.gstRate / 100)).toFixed(2)} (Approx)</p>
                             }
-                            <h3>Total: ${invoice.total.toFixed(2)}</h3>
-                            <p>Amount Paid: ${totalPaid.toFixed(2)}</p>
-                            <h4 className="text-primary">Balance Due: ${balanceDue.toFixed(2)}</h4>
+                            <h3>Total: {invoice.currency} {invoice.total.toFixed(2)}</h3>
+                            <p>Amount Paid: {invoice.currency} {totalPaid.toFixed(2)}</p>
+                            <h4 className="text-primary">Balance Due: {invoice.currency} {balanceDue.toFixed(2)}</h4>
                         </div>
                     </div>
                 </div>
@@ -175,7 +175,7 @@ const InvoiceDetails = () => {
                         <ul className="list">
                             {invoice.payments.map((pay, index) => (
                                 <li key={index} style={{ borderBottom: '1px solid #ccc', padding: '10px 0' }}>
-                                    <strong>${pay.amount}</strong> - {new Date(pay.date).toLocaleDateString()}
+                                    <strong>{invoice.currency} {pay.amount}</strong> - {new Date(pay.date).toLocaleDateString()}
                                     <br />
                                     <span className="text-secondary">{pay.method}</span> {pay.note && <span>- {pay.note}</span>}
                                 </li>
