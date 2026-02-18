@@ -66,6 +66,16 @@ const InvoiceDetails = () => {
         });
     };
 
+    const sendEmail = async () => {
+        try {
+            await axios.post(`/api/invoices/${id}/send`);
+            alert('Invoice sent to email successfully!');
+        } catch (err) {
+            console.error(err);
+            alert('Failed to send email.');
+        }
+    };
+
     if (!invoice) return <div>Loading...</div>;
 
     const totalPaid = invoice.payments ? invoice.payments.reduce((acc, p) => acc + p.amount, 0) : 0;
@@ -77,7 +87,12 @@ const InvoiceDetails = () => {
                 <div className="card">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Link to="/" className="btn btn-light">Back</Link>
-                        <button onClick={downloadPDF} className="btn btn-secondary">Download PDF</button>
+                        <div>
+                            <button onClick={sendEmail} className="btn btn-primary" style={{ marginRight: '10px' }}>
+                                <i className="fas fa-envelope"></i> Send Email
+                            </button>
+                            <button onClick={downloadPDF} className="btn btn-secondary">Download PDF</button>
+                        </div>
                     </div>
 
                     <div id="invoice-preview" style={{ padding: '20px', margin: '20px 0', border: '1px solid #ccc', background: '#fff' }}>
@@ -123,13 +138,11 @@ const InvoiceDetails = () => {
                         </table>
 
                         <div style={{ textAlign: 'right' }}>
-                            {/* Recalculating subtotal for display since we didn't store it separately, or just reverse calc if needed. 
-                               Actually, we stored 'total' which includes GST. 
-                               If we want to show breakdown, we need GST Rate. 
-                               We stored gstRate in Invoice! 
-                           */}
+
+                            <p>Subtotal: {invoice.currency} {invoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0).toFixed(2)}</p>
+                            {invoice.discount > 0 && <p>Discount: {invoice.currency} {invoice.discount}</p>}
                             {invoice.gstRate > 0 &&
-                                <p>GST ({invoice.gstRate}%): {invoice.currency} {((invoice.total / (1 + invoice.gstRate / 100)) * (invoice.gstRate / 100)).toFixed(2)} (Approx)</p>
+                                <p>GST ({invoice.gstRate}%): {invoice.currency} {(((invoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) - (invoice.discount || 0)) * invoice.gstRate) / 100).toFixed(2)}</p>
                             }
                             <h3>Total: {invoice.currency} {invoice.total.toFixed(2)}</h3>
                             <p>Amount Paid: {invoice.currency} {totalPaid.toFixed(2)}</p>

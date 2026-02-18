@@ -21,13 +21,14 @@ const InvoiceForm = () => {
         status: 'Pending',
         currency: 'USD',
         dueDate: '',
+        discount: 0,
         items: [{ description: '', quantity: 1, price: 0 }]
     });
 
     const [customers, setCustomers] = useState([]);
     const [products, setProducts] = useState([]);
 
-    const { clientName, clientEmail, businessName, businessGST, clientGST, gstRate, status, currency, dueDate, items } = invoice;
+    const { clientName, clientEmail, businessName, businessGST, clientGST, gstRate, status, currency, dueDate, discount, items } = invoice;
 
     useEffect(() => {
         if (id) {
@@ -126,8 +127,9 @@ const InvoiceForm = () => {
 
     const calculateTotal = () => {
         const subTotal = calculateSubTotal();
-        const gstAmount = (subTotal * gstRate) / 100;
-        return subTotal + gstAmount;
+        const taxableAmount = subTotal - (discount || 0);
+        const gstAmount = (taxableAmount * gstRate) / 100;
+        return taxableAmount + gstAmount;
     };
 
     const onSubmit = async e => {
@@ -250,6 +252,10 @@ const InvoiceForm = () => {
                         <label>GST Rate (%)</label>
                         <input type="number" name="gstRate" value={gstRate} onChange={onChange} min="0" step="0.1" />
                     </div>
+                    <div className="form-group">
+                        <label>Discount</label>
+                        <input type="number" name="discount" value={discount} onChange={onChange} min="0" step="0.01" />
+                    </div>
                 </div>
 
                 <h3>Items</h3>
@@ -333,7 +339,8 @@ const InvoiceForm = () => {
 
                     <div style={{ textAlign: 'right' }}>
                         <p>Subtotal: {currency} {calculateSubTotal()}</p>
-                        <p>GST ({gstRate}%): {currency} {((calculateSubTotal() * gstRate) / 100).toFixed(2)}</p>
+                        <p>Discount: {currency} {discount}</p>
+                        <p>GST ({gstRate}%): {currency} {(((calculateSubTotal() - discount) * gstRate) / 100).toFixed(2)}</p>
                         <h3>Total: {currency} {calculateTotal().toFixed(2)}</h3>
                     </div>
                 </div>

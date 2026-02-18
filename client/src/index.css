@@ -21,6 +21,9 @@ body {
   line-height: 1.6;
   background-color: #fff;
   color: #333;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
 }
 
 a {
@@ -67,11 +70,20 @@ img {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .main-content {
   display: flex;
   flex: 1;
+  overflow: hidden;
+}
+
+.content-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  height: 100%;
 }
 
 /* Navbar */
@@ -81,6 +93,8 @@ img {
   /* Align links to the right */
   align-items: center;
   padding: 0.7rem 2rem;
+  flex-shrink: 0;
+  border-bottom: 2px solid #5a1482;
   z-index: 1;
   width: 100%;
   opacity: 0.9;
@@ -121,7 +135,9 @@ img {
   width: 250px;
   background: #333;
   color: #fff;
-  min-height: 100vh;
+  height: 100%;
+  overflow-y: auto;
+  flex-shrink: 0;
   /* Full height */
   padding-top: 20px;
   transition: all 0.3s;
@@ -315,6 +331,18 @@ button {
 
 /* Invoices Grid */
 .invoice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-gap: 2rem;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-gap: 2rem;
+}
+
+.grid-3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-gap: 2rem;

@@ -36,23 +36,25 @@ const AppContent = () => {
         <Navbar />
         <div className="main-content">
           <Sidebar />
-          <div className="container">
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
+          <div className="content-wrapper">
+            <div className="container">
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
 
-              {/* Protected Routes */}
-              <Route element={<PrivateRoute />}>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/create-invoice" element={<InvoiceForm />} />
-                <Route path="/edit-invoice/:id" element={<InvoiceForm />} />
-                <Route path="/invoice/:id" element={<InvoiceDetails />} />
-                <Route path="/customers" element={<Customers />} />
-                <Route path="/products" element={<Products />} />
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/settings" element={<Settings />} />
-              </Route>
-            </Routes>
+                {/* Protected Routes */}
+                <Route element={<PrivateRoute />}>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/create-invoice" element={<InvoiceForm />} />
+                  <Route path="/edit-invoice/:id" element={<InvoiceForm />} />
+                  <Route path="/invoice/:id" element={<InvoiceDetails />} />
+                  <Route path="/customers" element={<Customers />} />
+                  <Route path="/products" element={<Products />} />
+                  <Route path="/reports" element={<Reports />} />
+                  <Route path="/settings" element={<Settings />} />
+                </Route>
+              </Routes>
+            </div>
           </div>
         </div>
       </div>
