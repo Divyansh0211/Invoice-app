@@ -140,9 +140,9 @@ const InvoiceDetails = () => {
                         <div style={{ textAlign: 'right' }}>
 
                             <p>Subtotal: {invoice.currency} {invoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0).toFixed(2)}</p>
-                            {invoice.discount > 0 && <p>Discount: {invoice.currency} {invoice.discount}</p>}
+                            {invoice.discountRate > 0 && <p>Discount ({invoice.discountRate}%): {invoice.currency} {((invoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) * invoice.discountRate) / 100).toFixed(2)}</p>}
                             {invoice.gstRate > 0 &&
-                                <p>GST ({invoice.gstRate}%): {invoice.currency} {(((invoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) - (invoice.discount || 0)) * invoice.gstRate) / 100).toFixed(2)}</p>
+                                <p>GST ({invoice.gstRate}%): {invoice.currency} {(((invoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) - ((invoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) * (invoice.discountRate || 0)) / 100)) * invoice.gstRate) / 100).toFixed(2)}</p>
                             }
                             <h3>Total: {invoice.currency} {invoice.total.toFixed(2)}</h3>
                             <p>Amount Paid: {invoice.currency} {totalPaid.toFixed(2)}</p>

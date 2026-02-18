@@ -26,7 +26,7 @@ const InvoiceSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    discount: {
+    discountRate: {
         type: Number,
         default: 0
     },
