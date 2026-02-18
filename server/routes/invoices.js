@@ -18,6 +18,17 @@ router.get('/', auth, async (req, res) => {
     }
 });
 
+const getCurrencySymbol = (currency) => {
+    switch (currency) {
+        case 'USD': return '$';
+        case 'EUR': return '€';
+        case 'GBP': return '£';
+        case 'INR': return '₹';
+        case 'JPY': return '¥';
+        default: return currency;
+    }
+};
+
 // @route   POST api/invoices
 // @desc    Add new invoice
 // @access  Private
@@ -58,12 +69,13 @@ router.post('/', auth, async (req, res) => {
                 }
             });
 
+            const symbol = getCurrencySymbol(invoice.currency);
             const itemsHtml = invoice.items.map(item => `
                 <tr>
                     <td style="padding: 8px; border: 1px solid #ddd;">${item.description}</td>
                     <td style="padding: 8px; border: 1px solid #ddd;">${item.quantity}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${invoice.currency} ${item.price}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${invoice.currency} ${item.quantity * item.price}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${symbol} ${item.price}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${symbol} ${item.quantity * item.price}</td>
                 </tr>
             `).join('');
 
@@ -81,7 +93,7 @@ router.post('/', auth, async (req, res) => {
                             <p><strong>Invoice Date:</strong> ${new Date(invoice.date).toLocaleDateString()}</p>
                             <p><strong>Due Date:</strong> ${invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : 'N/A'}</p>
                             <p><strong>Status:</strong> ${invoice.status}</p>
-                            <h3 style="color: #28a745;">Total Amount: ${invoice.currency} ${invoice.total}</h3>
+                            <h3 style="color: #28a745;">Total Amount: ${symbol} ${invoice.total}</h3>
                         </div>
 
                         <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
@@ -104,15 +116,10 @@ router.post('/', auth, async (req, res) => {
                 `
             };
 
-            transporter.sendMail(mailOptions, (error, info) => {
-                if (error) {
-                    console.log('Error sending auto-email:', error);
-                } else {
-                    console.log('Auto-email sent: ' + info.response);
-                }
-            });
+            await transporter.sendMail(mailOptions);
+            console.log('Auto-email sent successfully');
         } catch (emailErr) {
-            console.error('Email service failed', emailErr);
+            console.error('Email service failed:', emailErr);
             // Don't fail the request if email fails, just log it
         }
 
@@ -242,6 +249,8 @@ router.post('/:id/payments', auth, async (req, res) => {
                 }
             });
 
+            console.log(`Sending payment receipt for invoice ${invoice._id} with currency ${invoice.currency}`);
+
             const balanceDue = invoice.total - totalPaid;
 
             const mailOptions = {
@@ -252,16 +261,16 @@ router.post('/:id/payments', auth, async (req, res) => {
                     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto;">
                         <h2 style="color: #333;">Payment Received</h2>
                         <p>Dear ${invoice.clientName},</p>
-                        <p>We have received a payment of <strong>${invoice.currency} ${amount}</strong> for your invoice.</p>
+                        <p>We have received a payment of <strong>${getCurrencySymbol(invoice.currency)} ${amount}</strong> for your invoice.</p>
                         
                         <div style="background: #f4f4f4; padding: 15px; margin: 20px 0;">
                             <p><strong>Payment Date:</strong> ${new Date(date).toLocaleDateString()}</p>
                             <p><strong>Payment Method:</strong> ${method}</p>
                             <p><strong>Transaction Note:</strong> ${note || 'N/A'}</p>
                             <hr>
-                            <p><strong>Invoice Total:</strong> ${invoice.currency} ${invoice.total}</p>
-                            <p><strong>Total Paid:</strong> ${invoice.currency} ${totalPaid}</p>
-                            <h3 style="color: #dc3545;">Balance Due: ${invoice.currency} ${balanceDue.toFixed(2)}</h3>
+                            <p><strong>Invoice Total:</strong> ${getCurrencySymbol(invoice.currency)} ${invoice.total}</p>
+                            <p><strong>Total Paid:</strong> ${getCurrencySymbol(invoice.currency)} ${totalPaid}</p>
+                            <h3 style="color: #dc3545;">Balance Due: ${getCurrencySymbol(invoice.currency)} ${balanceDue.toFixed(2)}</h3>
                         </div>
 
                         <p>Thank you for your business!</p>
@@ -269,13 +278,8 @@ router.post('/:id/payments', auth, async (req, res) => {
                 `
             };
 
-            transporter.sendMail(mailOptions, (error, info) => {
-                if (error) {
-                    console.log('Error sending payment receipt:', error);
-                } else {
-                    console.log('Payment receipt sent: ' + info.response);
-                }
-            });
+            await transporter.sendMail(mailOptions);
+            console.log('Payment receipt sent successfully');
         } catch (emailErr) {
             console.error('Email service failed', emailErr);
         }
@@ -309,12 +313,13 @@ router.post('/:id/send', auth, async (req, res) => {
             }
         });
 
+        const symbol = getCurrencySymbol(invoice.currency);
         const itemsHtml = invoice.items.map(item => `
             <tr>
                 <td style="padding: 8px; border: 1px solid #ddd;">${item.description}</td>
                 <td style="padding: 8px; border: 1px solid #ddd;">${item.quantity}</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${invoice.currency} ${item.price}</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${invoice.currency} ${item.quantity * item.price}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${symbol} ${item.price}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${symbol} ${item.quantity * item.price}</td>
             </tr>
         `).join('');
 
@@ -332,7 +337,7 @@ router.post('/:id/send', auth, async (req, res) => {
                         <p><strong>Invoice Date:</strong> ${new Date(invoice.date).toLocaleDateString()}</p>
                         <p><strong>Due Date:</strong> ${invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : 'N/A'}</p>
                         <p><strong>Status:</strong> ${invoice.status}</p>
-                        <h3 style="color: #28a745;">Total Amount: ${invoice.currency} ${invoice.total}</h3>
+                        <h3 style="color: #28a745;">Total Amount: ${symbol} ${invoice.total}</h3>
                     </div>
 
                     <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
@@ -355,15 +360,14 @@ router.post('/:id/send', auth, async (req, res) => {
             `
         };
 
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.log(error);
-                return res.status(500).json({ msg: 'Error sending email' });
-            } else {
-                console.log('Email sent: ' + info.response);
-                res.json({ msg: 'Invoice sent to email' });
-            }
-        });
+        try {
+            await transporter.sendMail(mailOptions);
+            console.log('Email sent successfully');
+            res.json({ msg: 'Invoice sent to email' });
+        } catch (emailErr) {
+            console.error('Email service failed:', emailErr);
+            res.status(500).json({ msg: 'Error sending email' });
+        }
 
     } catch (err) {
         console.error(err.message);
