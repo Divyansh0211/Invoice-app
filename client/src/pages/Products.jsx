@@ -1,15 +1,22 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
+import AuthContext from '../context/authContext';
 
 const Products = () => {
+    const authContext = useContext(AuthContext);
+    const { user, updateProfile } = authContext;
+
     const [products, setProducts] = useState([]);
+    const [newClass, setNewClass] = useState('');
     const [formData, setFormData] = useState({
         name: '',
         description: '',
-        price: ''
+        price: '',
+        productClass: ''
     });
 
-    const { name, description, price } = formData;
+    const { name, description, price, productClass } = formData;
 
     useEffect(() => {
         getProducts();
@@ -30,7 +37,7 @@ const Products = () => {
         e.preventDefault();
         try {
             await axios.post('/api/products', formData);
-            setFormData({ name: '', description: '', price: '' });
+            setFormData({ name: '', description: '', price: '', productClass: '' });
             getProducts();
         } catch (err) {
             console.error(err);
@@ -48,15 +55,51 @@ const Products = () => {
         }
     }
 
+    const handleAddClass = (e) => {
+        e.preventDefault();
+        if (newClass.trim() === '') return;
+
+        const updatedClasses = [...(user?.productClasses || []), newClass];
+        updateProfile({ productClasses: updatedClasses });
+        setNewClass('');
+    };
+
+
+
     return (
         <div className="grid-2">
             <div>
+                <div className="card">
+                    <h3>Manage Product Classes</h3>
+                    <form onSubmit={handleAddClass}>
+                        <div className="form-group">
+                            <label>New Class Name</label>
+                            <input
+                                type="text"
+                                value={newClass}
+                                onChange={(e) => setNewClass(e.target.value)}
+                                placeholder="e.g. Electronics"
+                            />
+                        </div>
+                        <input type="submit" value="Add Class" className="btn btn-dark btn-block" />
+                    </form>
+
+                </div>
                 <div className="card">
                     <h3>Add Product</h3>
                     <form onSubmit={onSubmit}>
                         <div className="form-group">
                             <label>Product Name</label>
                             <input type="text" name="name" value={name} onChange={onChange} required />
+                        </div>
+                        <div className="form-group">
+                            <label>Classification</label>
+                            <select name="productClass" value={productClass} onChange={onChange}>
+                                <option value="">Select Class</option>
+                                {user && user.productClasses && user.productClasses.map((cls, index) => (
+                                    <option key={index} value={cls}>{cls}</option>
+                                ))}
+                            </select>
                         </div>
                         <div className="form-group">
                             <label>Description</label>
@@ -75,6 +118,7 @@ const Products = () => {
                 {products.map(product => (
                     <div key={product._id} className="card my-1">
                         <h4>{product.name}</h4>
+                        {product.productClass && <span className="badge badge-light">{product.productClass}</span>}
                         <p>{product.description}</p>
                         <p className="text-primary">${product.price}</p>
                         <button onClick={() => deleteProduct(product._id)} className="btn btn-danger btn-sm">Delete</button>

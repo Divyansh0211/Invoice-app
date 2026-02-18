@@ -79,7 +79,7 @@ router.put('/:id', auth, async (req, res) => {
         invoice = await Invoice.findByIdAndUpdate(
             req.params.id,
             { $set: invoiceFields },
-            { new: true }
+            { returnDocument: 'after' }
         );
 
         res.json(invoice);

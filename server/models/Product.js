@@ -16,6 +16,9 @@ const ProductSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    productClass: {
+        type: String
+    },
     date: {
         type: Date,
         default: Date.now

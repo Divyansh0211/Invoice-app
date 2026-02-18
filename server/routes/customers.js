@@ -65,7 +65,7 @@ router.put('/:id', auth, async (req, res) => {
         customer = await Customer.findByIdAndUpdate(
             req.params.id,
             { $set: customerFields },
-            { new: true }
+            { returnDocument: 'after' }
         );
 
         res.json(customer);

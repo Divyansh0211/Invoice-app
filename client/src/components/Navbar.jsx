@@ -11,16 +11,22 @@ const Navbar = () => {
     };
 
     const authLinks = (
-        <>
-            <li className="nav-item">
-                Hello, {user && user.name} <span style={{ fontSize: '0.8rem', background: '#28a745', color: 'white', padding: '2px 5px', borderRadius: '5px', marginLeft: '5px' }}>Cloud Synced <i className="fas fa-check-circle"></i></span>
-            </li>
-            <li>
-                <a onClick={onLogout} href="#!">
-                    <i className="fas fa-sign-out-alt"></i> <span className="hide-sm">Logout</span>
-                </a>
-            </li>
-        </>
+        <li className="nav-item flex align-center">
+            <div className="dropdown">
+                <button className="dropbtn">
+                    <i className="fas fa-user-circle"></i> {user && user.name} <i className="fas fa-caret-down"></i>
+                </button>
+                <div className="dropdown-content">
+                    <Link to="/settings" className="text-dark">Settings</Link>
+                    <a onClick={onLogout} href="#!" className="text-danger">
+                        <i className="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+            <span style={{ fontSize: '0.8rem', background: '#28a745', color: 'white', padding: '2px 5px', borderRadius: '5px', marginLeft: '5px' }}>
+                Cloud Synced <i className="fas fa-check-circle"></i>
+            </span>
+        </li>
     );
 
     const guestLinks = (
@@ -36,12 +42,10 @@ const Navbar = () => {
 
     return (
         <div className="navbar bg-primary">
-            <div className="container flex justify-between align-center">
-                <h1>
-                    Invoice App
-                </h1>
-                <ul>{isAuthenticated ? authLinks : guestLinks}</ul>
-            </div>
+            <h1>
+                Invoice App
+            </h1>
+            <ul>{isAuthenticated ? authLinks : guestLinks}</ul>
         </div>
     );
 };

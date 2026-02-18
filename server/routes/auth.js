@@ -233,8 +233,10 @@ router.post('/resend-otp', async (req, res) => {
 // @desc    Update user profile
 // @access  Private
 router.put('/profile', require('../middleware/auth'), async (req, res) => {
-    console.log('Backend: PUT /profile request body:', req.body);
-    const { name, phoneNumber, address, businessName, website, settings } = req.body;
+
+
+
+    const { name, phoneNumber, address, businessName, website, settings, productClasses } = req.body;
 
     // Build user object
     const profileFields = {};
@@ -244,6 +246,11 @@ router.put('/profile', require('../middleware/auth'), async (req, res) => {
     if (businessName) profileFields.businessName = businessName;
     if (website) profileFields.website = website;
     if (settings) profileFields.settings = settings;
+    if (productClasses) {
+        profileFields.productClasses = productClasses;
+    }
+
+
 
     try {
         let user = await User.findById(req.user.id);
@@ -253,10 +260,10 @@ router.put('/profile', require('../middleware/auth'), async (req, res) => {
         user = await User.findByIdAndUpdate(
             req.user.id,
             { $set: profileFields },
-            { new: true }
+            { returnDocument: 'after' }
         ).select('-password');
 
-        console.log('Backend: Updated user:', user);
+
         res.json(user);
     } catch (err) {
         console.error(err.message);

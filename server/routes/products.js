@@ -20,13 +20,14 @@ router.get('/', auth, async (req, res) => {
 // @desc    Add new product
 // @access  Private
 router.post('/', auth, async (req, res) => {
-    const { name, description, price } = req.body;
+    const { name, description, price, productClass } = req.body;
 
     try {
         const newProduct = new Product({
             name,
             description,
             price,
+            productClass,
             user: req.user.id
         });
 
@@ -42,13 +43,14 @@ router.post('/', auth, async (req, res) => {
 // @desc    Update product
 // @access  Private
 router.put('/:id', auth, async (req, res) => {
-    const { name, description, price } = req.body;
+    const { name, description, price, productClass } = req.body;
 
     // Build product object
     const productFields = {};
     if (name) productFields.name = name;
     if (description) productFields.description = description;
     if (price) productFields.price = price;
+    if (productClass) productFields.productClass = productClass;
 
     try {
         let product = await Product.findById(req.params.id);
@@ -63,7 +65,7 @@ router.put('/:id', auth, async (req, res) => {
         product = await Product.findByIdAndUpdate(
             req.params.id,
             { $set: productFields },
-            { new: true }
+            { returnDocument: 'after' }
         );
 
         res.json(product);
