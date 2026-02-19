@@ -112,15 +112,23 @@ const Dashboard = () => {
             .filter(inv => inv.status === 'Pending')
             .reduce((acc, inv) => acc + inv.total, 0);
 
-        const currencySymbol = getCurrencySymbol(user?.settings?.currency);
+        // 6. Expenses & Net Profit
+        axios.get('/api/expenses').then(res => {
+            const expenses = res.data;
+            const totalExpenses = expenses.reduce((acc, exp) => acc + exp.amount, 0);
+            const totalRevenue = data.reduce((acc, inv) => acc + inv.total, 0);
+            const netProfit = totalRevenue - totalExpenses;
 
-        setMetrics([
-            { title: 'Revenue trend', amount: `${currencySymbol}${currentMonthRevenue.toFixed(2)}`, trend: `${revenueGrowth.toFixed(1)}% Compared to last month`, icon: 'fa-chart-bar' },
-            { title: 'Pending Invoices', amount: `${currencySymbol}${reoccurring.toFixed(2)}`, trend: '10% Compared to last month', icon: 'fa-file-invoice-dollar' },
-            { title: 'Total Invoice sent', amount: totalInvoices, trend: '10% Compared to last month', icon: 'fa-paper-plane' },
-            { title: 'Tax Summary', amount: `${currencySymbol}${totalTax.toFixed(2)}`, trend: 'GST collected', icon: 'fa-percent' },
-            { title: 'Due this week', amount: `${currencySymbol}${dueThisWeek.toFixed(2)}`, trend: '10% Compared to last month', icon: 'fa-calendar-exclamation' }
-        ]);
+            const currencySymbol = getCurrencySymbol(user?.settings?.currency);
+
+            setMetrics([
+                { title: 'Revenue trend', amount: `${currencySymbol}${currentMonthRevenue.toFixed(2)}`, trend: `${revenueGrowth.toFixed(1)}% Compared to last month`, icon: 'fa-chart-bar' },
+                { title: 'Pending Invoices', amount: `${currencySymbol}${reoccurring.toFixed(2)}`, trend: '10% Compared to last month', icon: 'fa-file-invoice-dollar' },
+                { title: 'Total Invoice sent', amount: totalInvoices, trend: '10% Compared to last month', icon: 'fa-paper-plane' },
+                { title: 'Total Expenses', amount: `${currencySymbol}${totalExpenses.toFixed(2)}`, trend: 'cost', icon: 'fa-money-bill-wave' },
+                { title: 'Net Profit', amount: `${currencySymbol}${netProfit.toFixed(2)}`, trend: 'Revenue - Expenses', icon: 'fa-wallet' },
+            ]);
+        }).catch(err => console.error(err));
     };
 
     const prepareChartData = (data, currentFilter) => {

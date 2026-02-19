@@ -13,10 +13,11 @@ const Products = () => {
         name: '',
         description: '',
         price: '',
-        productClass: ''
+        productClass: '',
+        quantity: 0
     });
 
-    const { name, description, price, productClass } = formData;
+    const { name, description, price, productClass, quantity } = formData;
 
     useEffect(() => {
         getProducts();
@@ -37,7 +38,7 @@ const Products = () => {
         e.preventDefault();
         try {
             await axios.post('/api/products', formData);
-            setFormData({ name: '', description: '', price: '', productClass: '' });
+            setFormData({ name: '', description: '', price: '', productClass: '', quantity: 0 });
             getProducts();
         } catch (err) {
             console.error(err);
@@ -109,6 +110,10 @@ const Products = () => {
                             <label>Price</label>
                             <input type="number" name="price" value={price} onChange={onChange} required min="0" />
                         </div>
+                        <div className="form-group">
+                            <label>Stock Quantity</label>
+                            <input type="number" name="quantity" value={quantity} onChange={onChange} required border="1px solid #ccc" />
+                        </div>
                         <input type="submit" value="Add Product" className="btn btn-primary btn-block" />
                     </form>
                 </div>
@@ -121,6 +126,7 @@ const Products = () => {
                         {product.productClass && <span className="badge badge-light">{product.productClass}</span>}
                         <p>{product.description}</p>
                         <p className="text-primary">${product.price}</p>
+                        <p><strong>Stock:</strong> {product.quantity}</p>
                         <button onClick={() => deleteProduct(product._id)} className="btn btn-danger btn-sm">Delete</button>
                     </div>
                 ))}

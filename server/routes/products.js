@@ -20,7 +20,7 @@ router.get('/', auth, async (req, res) => {
 // @desc    Add new product
 // @access  Private
 router.post('/', auth, async (req, res) => {
-    const { name, description, price, productClass } = req.body;
+    const { name, description, price, productClass, quantity } = req.body;
 
     try {
         const newProduct = new Product({
@@ -28,6 +28,7 @@ router.post('/', auth, async (req, res) => {
             description,
             price,
             productClass,
+            quantity,
             user: req.user.id
         });
 
@@ -43,7 +44,7 @@ router.post('/', auth, async (req, res) => {
 // @desc    Update product
 // @access  Private
 router.put('/:id', auth, async (req, res) => {
-    const { name, description, price, productClass } = req.body;
+    const { name, description, price, productClass, quantity } = req.body;
 
     // Build product object
     const productFields = {};
@@ -51,6 +52,7 @@ router.put('/:id', auth, async (req, res) => {
     if (description) productFields.description = description;
     if (price) productFields.price = price;
     if (productClass) productFields.productClass = productClass;
+    if (quantity !== undefined) productFields.quantity = quantity;
 
     try {
         let product = await Product.findById(req.params.id);

@@ -99,7 +99,7 @@ const InvoiceForm = () => {
         if (product) {
             setInvoice({
                 ...invoice,
-                items: [...items, { description: product.name, quantity: 1, price: product.price }]
+                items: [...items, { product: product._id, description: product.name, quantity: 1, price: product.price }]
             });
         }
     };

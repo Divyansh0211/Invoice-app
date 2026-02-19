@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Invoice = require('../models/Invoice');
+const Product = require('../models/Product');
 
 // Middleware to verify token (Inline for now, should be separate)
 const auth = require('../middleware/auth'); // I need to create this
@@ -53,6 +54,17 @@ router.post('/', auth, async (req, res) => {
         });
 
         const invoice = await newInvoice.save();
+
+        // Update Stock
+        for (const item of invoice.items) {
+            if (item.product) {
+                const product = await Product.findById(item.product);
+                if (product) {
+                    product.quantity -= item.quantity;
+                    await product.save();
+                }
+            }
+        }
 
         // Send Email Automatically
         try {
@@ -185,6 +197,17 @@ router.delete('/:id', auth, async (req, res) => {
         // Make sure user owns invoice
         if (invoice.user.toString() !== req.user.id) {
             return res.status(401).json({ msg: 'Not authorized' });
+        }
+
+        // Restore Stock
+        for (const item of invoice.items) {
+            if (item.product) {
+                const product = await Product.findById(item.product);
+                if (product) {
+                    product.quantity += item.quantity;
+                    await product.save();
+                }
+            }
         }
 
         await Invoice.findByIdAndDelete(req.params.id);

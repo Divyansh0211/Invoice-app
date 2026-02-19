@@ -14,6 +14,7 @@ import Reports from './pages/Reports';
 import Invoices from './pages/Invoices';
 import Staff from './pages/Staff';
 import Communication from './pages/Communication';
+import Expenses from './pages/Expenses';
 import './index.css';
 
 import Sidebar from './components/Sidebar';
@@ -70,6 +71,7 @@ const AppContent = () => {
             <Route path="/staff" element={<Staff />} />
             <Route path="/communication" element={<Communication />} />
             <Route path="/products" element={<Products />} />
+            <Route path="/expenses" element={<Expenses />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/settings" element={<Settings />} />
           </Route>

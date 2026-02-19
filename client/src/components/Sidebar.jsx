@@ -48,6 +48,11 @@ const Sidebar = () => {
                     </Link>
                 </li>
                 <li>
+                    <Link to="/expenses" className={isActive('/expenses')}>
+                        <i className="fas fa-money-bill-wave"></i> Expenses
+                    </Link>
+                </li>
+                <li>
                     <Link to="/reports" className={isActive('/reports')}>
                         <i className="fas fa-chart-line"></i> Reports
                     </Link>
