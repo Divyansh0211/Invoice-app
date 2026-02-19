@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
+import AuthContext from '../context/authContext';
+import { getCurrencySymbol } from '../utils/currencyMap';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -11,6 +13,8 @@ import {
     Legend,
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 ChartJS.register(
     CategoryScale,
@@ -22,6 +26,9 @@ ChartJS.register(
 );
 
 const Reports = () => {
+    const { user } = useContext(AuthContext);
+    const currencySymbol = getCurrencySymbol(user?.settings?.currency);
+
     const [stats, setStats] = useState({
         totalSales: 0,
         totalPaid: 0,
@@ -119,7 +126,7 @@ const Reports = () => {
                                     <tr key={index} style={{ borderBottom: '1px solid #eee' }}>
                                         <td>{c.name}</td>
                                         <td>{c.count}</td>
-                                        <td className="text-danger">${c.totalPending.toFixed(2)}</td>
+                                        <td className="text-danger">{currencySymbol}{c.totalPending.toFixed(2)}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -133,9 +140,9 @@ const Reports = () => {
                         {advancedStats.partialInvoices.map(inv => (
                             <div key={inv._id} className="card bg-light my-1 p-1">
                                 <p><strong>Client:</strong> {inv.clientName}</p>
-                                <p><strong>Total:</strong> ${inv.total.toFixed(2)}</p>
-                                <p><strong>Paid:</strong> <span className="text-success">${inv.paidAmount.toFixed(2)}</span></p>
-                                <p><strong>Remaining:</strong> <span className="text-danger">${inv.pendingAmount.toFixed(2)}</span></p>
+                                <p><strong>Total:</strong> {currencySymbol}{inv.total.toFixed(2)}</p>
+                                <p><strong>Paid:</strong> <span className="text-success">{currencySymbol}{inv.paidAmount.toFixed(2)}</span></p>
+                                <p><strong>Remaining:</strong> <span className="text-danger">{currencySymbol}{inv.pendingAmount.toFixed(2)}</span></p>
                             </div>
                         ))}
                     </div>
@@ -149,7 +156,7 @@ const Reports = () => {
                                 <p><strong>Client:</strong> {inv.clientName}</p>
                                 <p><strong>Due Date:</strong> {new Date(inv.dueDate).toLocaleDateString()}</p>
                                 <p><strong>Days Overdue:</strong> {inv.daysOverdue}</p>
-                                <p><strong>Amount Due:</strong> <span className="text-danger">${inv.pendingAmount.toFixed(2)}</span></p>
+                                <p><strong>Amount Due:</strong> <span className="text-danger">{currencySymbol}{inv.pendingAmount.toFixed(2)}</span></p>
                             </div>
                         )) : <p>No overdue invoices found.</p>}
                     </div>
@@ -171,7 +178,7 @@ const Reports = () => {
                                     <tr key={inv._id} style={{ borderBottom: '1px solid #eee' }}>
                                         <td>{inv.dueDate ? new Date(inv.dueDate).toLocaleDateString() : 'N/A'}</td>
                                         <td>{inv.clientName}</td>
-                                        <td>${inv.pendingAmount ? inv.pendingAmount.toFixed(2) : (inv.total - (inv.paidAmount || 0)).toFixed(2)}</td>
+                                        <td>{currencySymbol}{inv.pendingAmount ? inv.pendingAmount.toFixed(2) : (inv.total - (inv.paidAmount || 0)).toFixed(2)}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -183,15 +190,15 @@ const Reports = () => {
                     <>
                         <div className="grid-3">
                             <div className="card text-center">
-                                <h2 className="text-primary">${stats.totalSales.toFixed(2)}</h2>
+                                <h2 className="text-primary">{currencySymbol}{stats.totalSales.toFixed(2)}</h2>
                                 <p>Total Sales</p>
                             </div>
                             <div className="card text-center">
-                                <h2 className="text-success">${stats.totalPaid.toFixed(2)}</h2>
+                                <h2 className="text-success">{currencySymbol}{stats.totalPaid.toFixed(2)}</h2>
                                 <p>Total Paid</p>
                             </div>
                             <div className="card text-center">
-                                <h2 className="text-danger">${stats.totalPending.toFixed(2)}</h2>
+                                <h2 className="text-danger">{currencySymbol}{stats.totalPending.toFixed(2)}</h2>
                                 <p>Total Pending</p>
                             </div>
                         </div>
@@ -219,10 +226,89 @@ const Reports = () => {
         }
     };
 
+    const downloadPDF = () => {
+        try {
+            const doc = new jsPDF();
+            const date = new Date().toLocaleDateString();
+
+            doc.setFontSize(18);
+            doc.text('Financial Report', 14, 22);
+            doc.setFontSize(11);
+            doc.setTextColor(100);
+            doc.text(`Generated on: ${date}`, 14, 30);
+
+            if (reportType === 'overview') {
+                doc.text('Overview', 14, 40);
+                autoTable(doc, {
+                    startY: 45,
+                    head: [['Metric', 'Value']],
+                    body: [
+                        ['Total Sales', `${currencySymbol}${stats.totalSales.toFixed(2)}`],
+                        ['Total Paid', `${currencySymbol}${stats.totalPaid.toFixed(2)}`],
+                        ['Total Pending', `${currencySymbol}${stats.totalPending.toFixed(2)}`],
+                        ['Total Invoices', stats.totalInvoices],
+                        ['Total Customers', stats.customersCount],
+                        ['Total Products', stats.productsCount],
+                    ],
+                });
+            } else if (reportType === 'pendingCustomers') {
+                doc.text('Pending Customers Report', 14, 40);
+                autoTable(doc, {
+                    startY: 45,
+                    head: [['Customer Name', 'Pending Invoices', 'Total Pending Amount']],
+                    body: advancedStats.pendingCustomers.map(c => [c.name, c.count, `${currencySymbol}${c.totalPending.toFixed(2)}`]),
+                });
+            } else if (reportType === 'partial') {
+                doc.text('Partially Paid Invoices Report', 14, 40);
+                autoTable(doc, {
+                    startY: 45,
+                    head: [['Client', 'Total Amount', 'Paid Amount', 'Remaining Amount']],
+                    body: advancedStats.partialInvoices.map(inv => [
+                        inv.clientName,
+                        `${currencySymbol}${inv.total.toFixed(2)}`,
+                        `${currencySymbol}${inv.paidAmount.toFixed(2)}`,
+                        `${currencySymbol}${inv.pendingAmount.toFixed(2)}`
+                    ]),
+                });
+            } else if (reportType === 'overdue') {
+                doc.text('Overdue Invoices Report', 14, 40);
+                autoTable(doc, {
+                    startY: 45,
+                    head: [['Client', 'Due Date', 'Days Overdue', 'Amount Due']],
+                    body: advancedStats.overdueInvoices.map(inv => [
+                        inv.clientName,
+                        new Date(inv.dueDate).toLocaleDateString(),
+                        inv.daysOverdue,
+                        `${currencySymbol}${inv.pendingAmount.toFixed(2)}`
+                    ]),
+                });
+            } else if (reportType === 'dueDates') {
+                doc.text('Invoices Sorted by Due Date', 14, 40);
+                autoTable(doc, {
+                    startY: 45,
+                    head: [['Due Date', 'Client', 'Amount Due']],
+                    body: advancedStats.dueInvoices.map(inv => [
+                        new Date(inv.dueDate).toLocaleDateString(),
+                        inv.clientName,
+                        `${currencySymbol}${inv.pendingAmount ? inv.pendingAmount.toFixed(2) : (inv.total - (inv.paidAmount || 0)).toFixed(2)}`
+                    ]),
+                });
+            }
+
+            doc.save(`report_${reportType}_${Date.now()}.pdf`);
+        } catch (err) {
+            console.error("PDF Download Error:", err);
+            alert("Failed to download PDF: " + err.message);
+        }
+    };
+
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <h1 className="large text-primary">Reports & Analytics</h1>
+                <button className="btn btn-dark" onClick={downloadPDF}>
+                    <i className="fas fa-file-pdf"></i> Download PDF
+                </button>
             </div>
 
             {renderReportContent()}

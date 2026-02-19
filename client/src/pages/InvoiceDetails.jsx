@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useParams, Link } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { getCurrencySymbol } from '../utils/currencyMap';
 
 const InvoiceDetails = () => {
     const { id } = useParams();
@@ -76,6 +77,18 @@ const InvoiceDetails = () => {
         }
     };
 
+    const sendReminder = async () => {
+        if (window.confirm('Send payment reminder email to client?')) {
+            try {
+                await axios.post(`/api/invoices/${id}/remind`);
+                alert('Payment Reminder sent successfully!');
+            } catch (err) {
+                console.error(err);
+                alert('Failed to send reminder.');
+            }
+        }
+    };
+
     if (!invoice) return <div>Loading...</div>;
 
     const totalPaid = invoice.payments ? invoice.payments.reduce((acc, p) => acc + p.amount, 0) : 0;
@@ -91,6 +104,11 @@ const InvoiceDetails = () => {
                             <button onClick={sendEmail} className="btn btn-primary" style={{ marginRight: '10px' }}>
                                 <i className="fas fa-envelope"></i> Send Email
                             </button>
+                            {invoice.status !== 'Paid' && (
+                                <button onClick={sendReminder} className="btn btn-dark" style={{ marginRight: '10px' }}>
+                                    <i className="fas fa-bell"></i> Send Reminder
+                                </button>
+                            )}
                             <button onClick={downloadPDF} className="btn btn-secondary">Download PDF</button>
                         </div>
                     </div>
@@ -130,8 +148,8 @@ const InvoiceDetails = () => {
                                     <tr key={index} style={{ borderBottom: '1px solid #eee' }}>
                                         <td style={{ padding: '10px' }}>{item.description}</td>
                                         <td style={{ padding: '10px' }}>{item.quantity}</td>
-                                        <td style={{ padding: '10px' }}>{invoice.currency} {item.price}</td>
-                                        <td style={{ padding: '10px' }}>{invoice.currency} {item.quantity * item.price}</td>
+                                        <td style={{ padding: '10px' }}>{getCurrencySymbol(invoice.currency)} {item.price}</td>
+                                        <td style={{ padding: '10px' }}>{getCurrencySymbol(invoice.currency)} {item.quantity * item.price}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -139,14 +157,14 @@ const InvoiceDetails = () => {
 
                         <div style={{ textAlign: 'right' }}>
 
-                            <p>Subtotal: {invoice.currency} {invoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0).toFixed(2)}</p>
-                            {invoice.discountRate > 0 && <p>Discount ({invoice.discountRate}%): {invoice.currency} {((invoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) * invoice.discountRate) / 100).toFixed(2)}</p>}
+                            <p>Subtotal: {getCurrencySymbol(invoice.currency)} {invoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0).toFixed(2)}</p>
+                            {invoice.discountRate > 0 && <p>Discount ({invoice.discountRate}%): {getCurrencySymbol(invoice.currency)} {((invoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) * invoice.discountRate) / 100).toFixed(2)}</p>}
                             {invoice.gstRate > 0 &&
-                                <p>GST ({invoice.gstRate}%): {invoice.currency} {(((invoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) - ((invoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) * (invoice.discountRate || 0)) / 100)) * invoice.gstRate) / 100).toFixed(2)}</p>
+                                <p>GST ({invoice.gstRate}%): {getCurrencySymbol(invoice.currency)} {(((invoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) - ((invoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) * (invoice.discountRate || 0)) / 100)) * invoice.gstRate) / 100).toFixed(2)}</p>
                             }
-                            <h3>Total: {invoice.currency} {invoice.total.toFixed(2)}</h3>
-                            <p>Amount Paid: {invoice.currency} {totalPaid.toFixed(2)}</p>
-                            <h4 className="text-primary">Balance Due: {invoice.currency} {balanceDue.toFixed(2)}</h4>
+                            <h3>Total: {getCurrencySymbol(invoice.currency)} {invoice.total.toFixed(2)}</h3>
+                            <p>Amount Paid: {getCurrencySymbol(invoice.currency)} {totalPaid.toFixed(2)}</p>
+                            <h4 className="text-primary">Balance Due: {getCurrencySymbol(invoice.currency)} {balanceDue.toFixed(2)}</h4>
                         </div>
                     </div>
                 </div>
@@ -188,7 +206,7 @@ const InvoiceDetails = () => {
                         <ul className="list">
                             {invoice.payments.map((pay, index) => (
                                 <li key={index} style={{ borderBottom: '1px solid #ccc', padding: '10px 0' }}>
-                                    <strong>{invoice.currency} {pay.amount}</strong> - {new Date(pay.date).toLocaleDateString()}
+                                    <strong>{getCurrencySymbol(invoice.currency)} {pay.amount}</strong> - {new Date(pay.date).toLocaleDateString()}
                                     <br />
                                     <span className="text-secondary">{pay.method}</span> {pay.note && <span>- {pay.note}</span>}
                                 </li>

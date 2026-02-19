@@ -70,79 +70,92 @@ const Signup = () => {
     };
 
     return (
-        <div className="auth-form-container">
-            <h1>Account <span className="text-primary">{step === 1 ? 'Register' : 'Verify OTP'}</span></h1>
-            <form onSubmit={onSubmit}>
-                {step === 1 && (
-                    <>
-                        <div className="form-group">
-                            <label htmlFor="name">Name</label>
-                            <input
-                                type="text"
-                                name="name"
-                                value={name}
-                                onChange={onChange}
-                                required
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="email">Email Address</label>
-                            <input
-                                type="email"
-                                name="email"
-                                value={email}
-                                onChange={onChange}
-                                required
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="password">Password</label>
-                            <input
-                                type="password"
-                                name="password"
-                                value={password}
-                                onChange={onChange}
-                                required
-                                minLength="6"
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="confirmPassword">Confirm Password</label>
-                            <input
-                                type="password"
-                                name="confirmPassword"
-                                value={confirmPassword}
-                                onChange={onChange}
-                                required
-                                minLength="6"
-                            />
-                        </div>
-                    </>
-                )}
-                {step === 2 && (
-                    <div className="form-group">
-                        <label htmlFor="otp">Enter OTP sent to your email</label>
-                        <input
-                            type="text"
-                            name="otp"
-                            value={otp}
-                            onChange={onChange}
-                            required
-                        />
-                    </div>
-                )}
-                <input type="submit" value={step === 1 ? "Register" : "Verify"} className="btn btn-primary btn-block" />
-                {step === 2 && (
-                    <button type="button" onClick={handleResendOtp} className="btn btn-light btn-block my-1">
-                        Resend OTP
-                    </button>
-                )}
-            </form>
-            {step === 1 && (
-                <p>
-                    Already have an account? <Link to="/login">Login</Link>
-                </p>
-            )}
+        <div className="auth-wrapper">
+            <div className="auth-image">
+                {/* Background image handled by CSS */}
+            </div>
+            <div className="auth-form-side">
+                <div className="auth-form-container">
+                    <h1>{step === 1 ? 'Sign Up' : 'Verify Account'}</h1>
+                    <p>{step === 1 ? 'Enter your details to create your account!' : 'Enter the OTP sent to your email.'}</p>
+                    <form onSubmit={onSubmit}>
+                        {step === 1 && (
+                            <>
+                                <div className="form-group">
+                                    <label htmlFor="name">Name</label>
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        value={name}
+                                        onChange={onChange}
+                                        required
+                                        placeholder="John Doe"
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="email">Email</label>
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        value={email}
+                                        onChange={onChange}
+                                        required
+                                        placeholder="mail@simmmple.com"
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="password">Password</label>
+                                    <input
+                                        type="password"
+                                        name="password"
+                                        value={password}
+                                        onChange={onChange}
+                                        required
+                                        minLength="6"
+                                        placeholder="Min. 8 characters"
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="confirmPassword">Confirm Password</label>
+                                    <input
+                                        type="password"
+                                        name="confirmPassword"
+                                        value={confirmPassword}
+                                        onChange={onChange}
+                                        required
+                                        minLength="6"
+                                        placeholder="Confirm Password"
+                                    />
+                                </div>
+                            </>
+                        )}
+                        {step === 2 && (
+                            <div className="form-group">
+                                <label htmlFor="otp">Enter OTP</label>
+                                <input
+                                    type="text"
+                                    name="otp"
+                                    value={otp}
+                                    onChange={onChange}
+                                    required
+                                    placeholder="Check your email for OTP"
+                                />
+                            </div>
+                        )}
+                        <input type="submit" value={step === 1 ? "Sign Up" : "Verify"} className="btn btn-primary btn-block" style={{ width: '100%', padding: '15px' }} />
+                        {step === 2 && (
+                            <button type="button" onClick={handleResendOtp} className="btn btn-light btn-block my-1" style={{ width: '100%' }}>
+                                Resend OTP
+                            </button>
+                        )}
+                    </form>
+                    {step === 1 && (
+                        <p style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+                            Already have an account? <Link to="/login" style={{ color: '#1a73e8', fontWeight: '500' }}>Sign In</Link>
+                        </p>
+                    )}
+                </div>
+            </div>
         </div>
     );
 };

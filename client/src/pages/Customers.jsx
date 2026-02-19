@@ -3,6 +3,7 @@ import axios from 'axios';
 
 const Customers = () => {
     const [customers, setCustomers] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -77,7 +78,18 @@ const Customers = () => {
             </div>
             <div>
                 <h3>Customers List</h3>
-                {customers.map(customer => (
+                <input
+                    type="text"
+                    placeholder="Search by name or email..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="form-control mb-2"
+                    style={{ width: '100%', padding: '10px', marginBottom: '20px', borderRadius: '5px', border: '1px solid #ccc' }}
+                />
+                {customers.filter(customer =>
+                    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    customer.email.toLowerCase().includes(searchTerm.toLowerCase())
+                ).map(customer => (
                     <div key={customer._id} className="card my-1">
                         <h4>{customer.name}</h4>
                         <p>{customer.email}</p>
@@ -85,6 +97,7 @@ const Customers = () => {
                         <button onClick={() => deleteCustomer(customer._id)} className="btn btn-danger btn-sm">Delete</button>
                     </div>
                 ))}
+                {customers.length === 0 && <p>No customers found.</p>}
             </div>
         </div>
     );

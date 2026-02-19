@@ -203,6 +203,122 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // Forgot Password
+    const forgotPassword = async email => {
+        const config = {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        };
+
+        try {
+            const res = await axios.post('/api/auth/forgot-password', { email }, config);
+            return { success: true, msg: res.data.msg };
+        } catch (err) {
+            return {
+                success: false,
+                msg: err.response && err.response.data && err.response.data.msg ? err.response.data.msg : 'Request failed'
+            };
+        }
+    };
+
+    // Reset Password
+    const resetPassword = async (email, otp, newPassword) => {
+        const config = {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        };
+
+        try {
+            const res = await axios.post('/api/auth/reset-password', { email, otp, newPassword }, config);
+            return { success: true, msg: res.data.msg };
+        } catch (err) {
+            return {
+                success: false,
+                msg: err.response && err.response.data && err.response.data.msg ? err.response.data.msg : 'Reset failed'
+            };
+        }
+    };
+
+    // Change Password
+    const changePassword = async (currentPassword, newPassword) => {
+        const config = {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        };
+
+        try {
+            const res = await axios.post('/api/auth/change-password', { currentPassword, newPassword }, config);
+            return { success: true, msg: res.data.msg };
+        } catch (err) {
+            return {
+                success: false,
+                msg: err.response && err.response.data && err.response.data.msg ? err.response.data.msg : 'Password change failed'
+            };
+        }
+    };
+
+    // Generate 2FA
+    const generate2FA = async () => {
+        try {
+            const res = await axios.post('/api/auth/2fa/generate');
+            return { success: true, msg: res.data.msg };
+        } catch (err) {
+            return {
+                success: false,
+                msg: err.response && err.response.data && err.response.data.msg ? err.response.data.msg : 'Generation failed'
+            };
+        }
+    };
+
+    // Verify 2FA
+    const verify2FA = async (token) => {
+        const config = {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        };
+
+        try {
+            const res = await axios.post('/api/auth/2fa/verify', { token }, config);
+
+            // Reload user to update isTwoFactorEnabled status
+            loadUser();
+
+            return { success: true, msg: res.data.msg };
+        } catch (err) {
+            return {
+                success: false,
+                msg: err.response && err.response.data && err.response.data.msg ? err.response.data.msg : 'Verification failed'
+            };
+        }
+    };
+
+    // Disable 2FA
+    const disable2FA = async (password) => {
+        const config = {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        };
+
+        try {
+            const res = await axios.post('/api/auth/2fa/disable', { password }, config);
+
+            // Reload user to update isTwoFactorEnabled status
+            loadUser();
+
+            return { success: true, msg: res.data.msg };
+        } catch (err) {
+            return {
+                success: false,
+                msg: err.response && err.response.data && err.response.data.msg ? err.response.data.msg : 'Disable failed'
+            };
+        }
+    };
+
     // Logout
     const logout = () => dispatch({ type: 'LOGOUT' });
 
@@ -224,7 +340,13 @@ export const AuthProvider = ({ children }) => {
                 loadUser,
                 verifyOtp,
                 resendOtp,
-                updateProfile
+                updateProfile,
+                forgotPassword,
+                resetPassword,
+                changePassword,
+                generate2FA,
+                verify2FA,
+                disable2FA
             }}
         >
             {children}

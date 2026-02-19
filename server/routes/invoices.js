@@ -375,4 +375,70 @@ router.post('/:id/send', auth, async (req, res) => {
     }
 });
 
+// @route   POST api/invoices/:id/remind
+// @desc    Send payment reminder via email
+// @access  Private
+router.post('/:id/remind', auth, async (req, res) => {
+    try {
+        const invoice = await Invoice.findById(req.params.id);
+
+        if (!invoice) return res.status(404).json({ msg: 'Invoice not found' });
+
+        // Make sure user owns invoice
+        if (invoice.user.toString() !== req.user.id) {
+            return res.status(401).json({ msg: 'Not authorized' });
+        }
+
+        const transporter = require('nodemailer').createTransport({
+            service: process.env.EMAIL_SERVICE,
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+
+        const symbol = getCurrencySymbol(invoice.currency);
+        const totalPaid = invoice.payments ? invoice.payments.reduce((acc, p) => acc + p.amount, 0) : 0;
+        const balanceDue = invoice.total - totalPaid;
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: invoice.clientEmail,
+            subject: `Payment Reminder: Invoice from ${invoice.businessName || 'Us'} - Due: ${new Date(invoice.dueDate).toLocaleDateString()}`,
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto;">
+                    <h2 style="color: #d9534f;">Payment Reminder</h2>
+                    <p>Dear ${invoice.clientName},</p>
+                    <p>This is a friendly reminder that your invoice from <strong>${invoice.businessName || 'Us'}</strong> is still pending.</p>
+                    
+                    <div style="background: #fdf2f2; padding: 15px; margin: 20px 0; border-left: 5px solid #d9534f;">
+                        <p><strong>Invoice Date:</strong> ${new Date(invoice.date).toLocaleDateString()}</p>
+                        <p><strong>Due Date:</strong> ${invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : 'N/A'}</p>
+                        <p><strong>Status:</strong> ${invoice.status}</p>
+                        <p><strong>Total Amount:</strong> ${symbol} ${invoice.total}</p>
+                        <h3 style="color: #d9534f;">Balance Due: ${symbol} ${balanceDue.toFixed(2)}</h3>
+                    </div>
+
+                    <p style="margin-top: 20px;">Please arrange for payment at your earliest convenience to avoid any service interruptions.</p>
+                    <p>If you have already made the payment, please disregard this email.</p>
+                    <p>Thank you!</p>
+                </div>
+            `
+        };
+
+        try {
+            await transporter.sendMail(mailOptions);
+            console.log('Reminder email sent successfully');
+            res.json({ msg: 'Reminder sent to email' });
+        } catch (emailErr) {
+            console.error('Email service failed:', emailErr);
+            res.status(500).json({ msg: 'Error sending email' });
+        }
+
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 module.exports = router;

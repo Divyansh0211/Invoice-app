@@ -57,6 +57,13 @@ const UserSchema = new mongoose.Schema({
     productClasses: {
         type: [String],
         default: []
+    },
+    twoFactorSecret: {
+        type: Object
+    },
+    isTwoFactorEnabled: {
+        type: Boolean,
+        default: false
     }
 });
 

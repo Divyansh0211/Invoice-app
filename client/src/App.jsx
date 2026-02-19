@@ -1,5 +1,5 @@
 import { useContext, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
 import { AuthProvider } from './context/authContext';
 import AuthContext from './context/authContext';
 import Navbar from './components/Navbar';
@@ -11,11 +11,31 @@ import InvoiceDetails from './pages/InvoiceDetails';
 import Customers from './pages/Customers';
 import Products from './pages/Products';
 import Reports from './pages/Reports';
+import Invoices from './pages/Invoices';
+import Staff from './pages/Staff';
+import Communication from './pages/Communication';
 import './index.css';
 
 import Sidebar from './components/Sidebar';
 import Settings from './pages/Settings';
 import PrivateRoute from './components/PrivateRoute';
+import ForgotPassword from './pages/ForgotPassword';
+
+const MainLayout = () => {
+  return (
+    <div className="app-container">
+      <Navbar />
+      <div className="main-content">
+        <Sidebar />
+        <div className="content-wrapper">
+          <div className="container">
+            <Outlet />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const AppContent = () => {
   const { user } = useContext(AuthContext);
@@ -32,32 +52,29 @@ const AppContent = () => {
 
   return (
     <Router>
-      <div className="app-container">
-        <Navbar />
-        <div className="main-content">
-          <Sidebar />
-          <div className="content-wrapper">
-            <div className="container">
-              <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
+      <Routes>
+        {/* Public Routes - No Layout */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
-                {/* Protected Routes */}
-                <Route element={<PrivateRoute />}>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/create-invoice" element={<InvoiceForm />} />
-                  <Route path="/edit-invoice/:id" element={<InvoiceForm />} />
-                  <Route path="/invoice/:id" element={<InvoiceDetails />} />
-                  <Route path="/customers" element={<Customers />} />
-                  <Route path="/products" element={<Products />} />
-                  <Route path="/reports" element={<Reports />} />
-                  <Route path="/settings" element={<Settings />} />
-                </Route>
-              </Routes>
-            </div>
-          </div>
-        </div>
-      </div>
+        {/* Protected Routes - Wrapped in PrivateRoute and MainLayout */}
+        <Route element={<PrivateRoute />}>
+          <Route element={<MainLayout />}>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/invoices" element={<Invoices />} />
+            <Route path="/create-invoice" element={<InvoiceForm />} />
+            <Route path="/edit-invoice/:id" element={<InvoiceForm />} />
+            <Route path="/invoice/:id" element={<InvoiceDetails />} />
+            <Route path="/customers" element={<Customers />} />
+            <Route path="/staff" element={<Staff />} />
+            <Route path="/communication" element={<Communication />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/settings" element={<Settings />} />
+          </Route>
+        </Route>
+      </Routes>
     </Router>
   );
 };

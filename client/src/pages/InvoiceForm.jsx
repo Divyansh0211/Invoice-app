@@ -19,7 +19,7 @@ const InvoiceForm = () => {
         clientGST: '',
         gstRate: 0,
         status: 'Pending',
-        currency: 'USD',
+        currency: user?.settings?.currency || 'USD',
         dueDate: '',
         discountRate: 0,
         items: [{ description: '', quantity: 1, price: 0 }]
@@ -33,10 +33,12 @@ const InvoiceForm = () => {
     useEffect(() => {
         if (id) {
             getInvoice(id);
+        } else if (user && user.settings) {
+            setInvoice(prev => ({ ...prev, currency: user.settings.currency || 'USD' }));
         }
         getCustomers();
         getProducts();
-    }, [id]);
+    }, [id, user]);
 
     const getInvoice = async (invoiceId) => {
         try {

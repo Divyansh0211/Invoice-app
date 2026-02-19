@@ -12,16 +12,9 @@ const Navbar = () => {
 
     const authLinks = (
         <li className="nav-item flex align-center">
-            <div className="dropdown">
-                <button className="dropbtn">
-                    <i className="fas fa-user-circle"></i> {user && user.name} <i className="fas fa-caret-down"></i>
-                </button>
-                <div className="dropdown-content">
-
-                    <a onClick={onLogout} href="#!" className="text-danger">
-                        <i className="fas fa-sign-out-alt"></i> Logout
-                    </a>
-                </div>
+            <div className="user-info" style={{ display: 'flex', alignItems: 'center', fontWeight: '500', color: 'var(--text-main)' }}>
+                <i className="fas fa-user-circle" style={{ marginRight: '8px', fontSize: '1.2rem' }}></i>
+                {user && user.name}
             </div>
             <span style={{ fontSize: '0.8rem', background: '#28a745', color: 'white', padding: '2px 5px', borderRadius: '5px', marginLeft: '5px' }}>
                 Cloud Synced <i className="fas fa-check-circle"></i>
