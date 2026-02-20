@@ -34,6 +34,23 @@ const InvoiceSchema = new mongoose.Schema({
         type: String,
         default: 'USD'
     },
+    invoiceNumber: {
+        type: String
+    },
+    termsAndConditions: {
+        type: String
+    },
+    logoUrl: {
+        type: String
+    },
+    signatureUrl: {
+        type: String
+    },
+    bankDetails: {
+        accountNo: String,
+        ifsc: String,
+        upiId: String
+    },
     items: [
         {
             product: {

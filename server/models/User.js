@@ -40,6 +40,17 @@ const UserSchema = new mongoose.Schema({
     website: {
         type: String
     },
+    logoUrl: {
+        type: String
+    },
+    panNumber: {
+        type: String
+    },
+    bankDetails: {
+        accountNo: { type: String, default: '' },
+        ifsc: { type: String, default: '' },
+        upiId: { type: String, default: '' }
+    },
     settings: {
         currency: {
             type: String,
@@ -52,6 +63,46 @@ const UserSchema = new mongoose.Schema({
         taxRate: {
             type: Number,
             default: 0
+        },
+        themeMode: {
+            type: String,
+            default: 'light'
+        },
+        enableTax: {
+            type: Boolean,
+            default: true
+        },
+        taxType: {
+            type: String,
+            default: 'GST'
+        },
+        decimalPrecision: {
+            type: Number,
+            default: 2
+        },
+        invoicePrefix: {
+            type: String,
+            default: 'INV-'
+        },
+        autoIncrement: {
+            type: Boolean,
+            default: true
+        },
+        nextInvoiceNumber: {
+            type: Number,
+            default: 1
+        },
+        defaultDueDays: {
+            type: Number,
+            default: 7
+        },
+        termsAndConditions: {
+            type: String,
+            default: 'Payment is due within {defaultDueDays} days. Please make checks payable to our company.'
+        },
+        signatureUrl: {
+            type: String,
+            default: ''
         }
     },
     productClasses: {

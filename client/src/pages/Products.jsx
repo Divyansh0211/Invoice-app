@@ -9,6 +9,8 @@ const Products = () => {
 
     const [products, setProducts] = useState([]);
     const [newClass, setNewClass] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isAddingClass, setIsAddingClass] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         description: '',
@@ -36,12 +38,15 @@ const Products = () => {
 
     const onSubmit = async e => {
         e.preventDefault();
+        setIsSubmitting(true);
         try {
             await axios.post('/api/products', formData);
             setFormData({ name: '', description: '', price: '', productClass: '', quantity: 0 });
             getProducts();
         } catch (err) {
             console.error(err);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -56,13 +61,18 @@ const Products = () => {
         }
     }
 
-    const handleAddClass = (e) => {
+    const handleAddClass = async (e) => {
         e.preventDefault();
         if (newClass.trim() === '') return;
 
-        const updatedClasses = [...(user?.productClasses || []), newClass];
-        updateProfile({ productClasses: updatedClasses });
-        setNewClass('');
+        setIsAddingClass(true);
+        try {
+            const updatedClasses = [...(user?.productClasses || []), newClass];
+            await updateProfile({ productClasses: updatedClasses });
+            setNewClass('');
+        } finally {
+            setIsAddingClass(false);
+        }
     };
 
 
@@ -82,7 +92,7 @@ const Products = () => {
                                 placeholder="e.g. Electronics"
                             />
                         </div>
-                        <input type="submit" value="Add Class" className="btn btn-dark btn-block" />
+                        <input type="submit" value={isAddingClass ? "Adding..." : "Add Class"} className="btn btn-dark btn-block" disabled={isAddingClass} />
                     </form>
 
                 </div>
@@ -114,7 +124,7 @@ const Products = () => {
                             <label>Stock Quantity</label>
                             <input type="number" name="quantity" value={quantity} onChange={onChange} required border="1px solid #ccc" />
                         </div>
-                        <input type="submit" value="Add Product" className="btn btn-primary btn-block" />
+                        <input type="submit" value={isSubmitting ? "Adding..." : "Add Product"} className="btn btn-primary btn-block" disabled={isSubmitting} />
                     </form>
                 </div>
             </div>

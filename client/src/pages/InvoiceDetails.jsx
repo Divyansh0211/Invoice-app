@@ -113,58 +113,94 @@ const InvoiceDetails = () => {
                         </div>
                     </div>
 
-                    <div id="invoice-preview" style={{ padding: '20px', margin: '20px 0', border: '1px solid #ccc', background: '#fff' }}>
-                        <div style={{ borderBottom: '2px solid #eee', paddingBottom: '10px', marginBottom: '20px' }}>
-                            <h2 style={{ color: '#333' }}>INVOICE</h2>
-                            <span className={`badge badge-${invoice.status === 'Paid' ? 'success' : invoice.status === 'Overdue' ? 'danger' : 'primary'}`} style={{ float: 'right', fontSize: '1.2rem' }}>
-                                {invoice.status}
-                            </span>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px' }}>
-                                <div>
-                                    <strong>From:</strong><br />
-                                    {invoice.businessName || 'Your Business'}<br />
-                                    {invoice.businessGST && <span>GST: {invoice.businessGST}</span>}
-                                </div>
-                                <div style={{ textAlign: 'right' }}>
-                                    <strong>To:</strong><br />
-                                    {invoice.clientName}<br />
-                                    {invoice.clientEmail}<br />
-                                    {invoice.clientGST && <span>GST: {invoice.clientGST}</span>}
-                                </div>
+                    <div id="invoice-preview" style={{ padding: '30px', margin: '20px 0', border: '1px solid #ccc', background: '#fff', color: '#333', position: 'relative' }}>
+                        {/* Watermark Logic */}
+                        <div style={{
+                            position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-45deg)',
+                            fontSize: '8rem', color: invoice.status === 'Paid' ? 'rgba(5,205,153,0.1)' : invoice.status === 'Overdue' ? 'rgba(238,93,80,0.1)' : 'rgba(0,0,0,0.05)',
+                            fontWeight: 'bold', zIndex: 0, pointerEvents: 'none', whiteSpace: 'nowrap'
+                        }}>
+                            {invoice.status === 'Paid' ? 'PAID' : invoice.status === 'Overdue' ? 'OVERDUE' : 'DRAFT'}
+                        </div>
+
+                        <div style={{ borderBottom: '2px solid #eee', paddingBottom: '20px', marginBottom: '20px', position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div>
+                                {invoice.logoUrl && <img src={invoice.logoUrl} alt="Logo" style={{ maxHeight: '80px', maxWidth: '200px', objectFit: 'contain', marginBottom: '10px' }} />}
+                                <h2 style={{ color: '#333', margin: '0 0 5px 0' }}>INVOICE {invoice.invoiceNumber ? `#${invoice.invoiceNumber}` : ''}</h2>
+                                <p style={{ margin: 0, color: '#666' }}>Date: {new Date(invoice.date).toLocaleDateString()}</p>
+                                {invoice.dueDate && <p style={{ margin: 0, color: '#666' }}>Due Date: {new Date(invoice.dueDate).toLocaleDateString()}</p>}
+                                <span className={`badge badge-${invoice.status === 'Paid' ? 'success' : invoice.status === 'Overdue' ? 'danger' : 'primary'}`} style={{ marginTop: '10px', display: 'inline-block' }}>
+                                    {invoice.status}
+                                </span>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                                <strong>From:</strong><br />
+                                <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{invoice.businessName || 'Your Business'}</span><br />
+                                {invoice.businessGST && <span>GST/Tax ID: {invoice.businessGST}</span>}
                             </div>
                         </div>
 
-                        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px' }}>
+                        <div style={{ marginBottom: '30px', position: 'relative', zIndex: 1 }}>
+                            <strong>Billed To:</strong><br />
+                            <span style={{ fontSize: '1.2rem' }}>{invoice.clientName}</span><br />
+                            {invoice.clientEmail}<br />
+                            {invoice.clientGST && <span>GST/Tax ID: {invoice.clientGST}</span>}
+                        </div>
+
+                        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px', position: 'relative', zIndex: 1 }}>
                             <thead>
-                                <tr style={{ borderBottom: '1px solid #ddd', textAlign: 'left' }}>
-                                    <th style={{ padding: '10px' }}>Item</th>
-                                    <th style={{ padding: '10px' }}>Qty</th>
-                                    <th style={{ padding: '10px' }}>Price</th>
-                                    <th style={{ padding: '10px' }}>Total</th>
+                                <tr style={{ borderBottom: '2px solid #333', textAlign: 'left', backgroundColor: '#f9f9f9' }}>
+                                    <th style={{ padding: '12px' }}>Item Description</th>
+                                    <th style={{ padding: '12px', textAlign: 'center' }}>Qty</th>
+                                    <th style={{ padding: '12px', textAlign: 'right' }}>Price</th>
+                                    <th style={{ padding: '12px', textAlign: 'right' }}>Total</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {invoice.items.map((item, index) => (
                                     <tr key={index} style={{ borderBottom: '1px solid #eee' }}>
-                                        <td style={{ padding: '10px' }}>{item.description}</td>
-                                        <td style={{ padding: '10px' }}>{item.quantity}</td>
-                                        <td style={{ padding: '10px' }}>{getCurrencySymbol(invoice.currency)} {item.price}</td>
-                                        <td style={{ padding: '10px' }}>{getCurrencySymbol(invoice.currency)} {item.quantity * item.price}</td>
+                                        <td style={{ padding: '12px' }}>{item.description}</td>
+                                        <td style={{ padding: '12px', textAlign: 'center' }}>{item.quantity}</td>
+                                        <td style={{ padding: '12px', textAlign: 'right' }}>{getCurrencySymbol(invoice.currency)} {Number(item.price).toFixed(2)}</td>
+                                        <td style={{ padding: '12px', textAlign: 'right' }}>{getCurrencySymbol(invoice.currency)} {(item.quantity * item.price).toFixed(2)}</td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
 
-                        <div style={{ textAlign: 'right' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '30px', position: 'relative', zIndex: 1 }}>
+                            <div style={{ flex: 1, paddingRight: '20px' }}>
+                                {(invoice.bankDetails?.accountNo || invoice.bankDetails?.ifsc || invoice.bankDetails?.upiId) && (
+                                    <div style={{ marginBottom: '20px' }}>
+                                        <strong>Bank Details:</strong>
+                                        {invoice.bankDetails.accountNo && <p style={{ margin: 0 }}>Account No: {invoice.bankDetails.accountNo}</p>}
+                                        {invoice.bankDetails.ifsc && <p style={{ margin: 0 }}>IFSC: {invoice.bankDetails.ifsc}</p>}
+                                        {invoice.bankDetails.upiId && <p style={{ margin: 0 }}>UPI: {invoice.bankDetails.upiId}</p>}
+                                    </div>
+                                )}
+                                {invoice.termsAndConditions && (
+                                    <div>
+                                        <strong>Terms & Conditions:</strong>
+                                        <p style={{ margin: 0, fontSize: '0.9rem', color: '#555', whiteSpace: 'pre-wrap' }}>{invoice.termsAndConditions}</p>
+                                    </div>
+                                )}
+                            </div>
+                            <div style={{ flex: 0.8, textAlign: 'right' }}>
+                                <p style={{ margin: '5px 0' }}>Subtotal: {getCurrencySymbol(invoice.currency)} {invoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0).toFixed(2)}</p>
+                                {invoice.discountRate > 0 && <p style={{ margin: '5px 0', color: '#d9534f' }}>Discount ({invoice.discountRate}%): -{getCurrencySymbol(invoice.currency)} {((invoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) * invoice.discountRate) / 100).toFixed(2)}</p>}
+                                {invoice.gstRate > 0 && <p style={{ margin: '5px 0' }}>Tax ({invoice.gstRate}%): {getCurrencySymbol(invoice.currency)} {(((invoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) - ((invoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) * (invoice.discountRate || 0)) / 100)) * invoice.gstRate) / 100).toFixed(2)}</p>}
 
-                            <p>Subtotal: {getCurrencySymbol(invoice.currency)} {invoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0).toFixed(2)}</p>
-                            {invoice.discountRate > 0 && <p>Discount ({invoice.discountRate}%): {getCurrencySymbol(invoice.currency)} {((invoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) * invoice.discountRate) / 100).toFixed(2)}</p>}
-                            {invoice.gstRate > 0 &&
-                                <p>GST ({invoice.gstRate}%): {getCurrencySymbol(invoice.currency)} {(((invoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) - ((invoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) * (invoice.discountRate || 0)) / 100)) * invoice.gstRate) / 100).toFixed(2)}</p>
-                            }
-                            <h3>Total: {getCurrencySymbol(invoice.currency)} {invoice.total.toFixed(2)}</h3>
-                            <p>Amount Paid: {getCurrencySymbol(invoice.currency)} {totalPaid.toFixed(2)}</p>
-                            <h4 className="text-primary">Balance Due: {getCurrencySymbol(invoice.currency)} {balanceDue.toFixed(2)}</h4>
+                                <h3 style={{ marginTop: '15px', borderTop: '2px solid #333', paddingTop: '10px' }}>Total Amount: {getCurrencySymbol(invoice.currency)} {invoice.total.toFixed(2)}</h3>
+                                <p style={{ margin: '5px 0' }}>Amount Paid: {getCurrencySymbol(invoice.currency)} {totalPaid.toFixed(2)}</p>
+                                <h4 className={balanceDue > 0 ? "text-danger" : "text-success"} style={{ marginTop: '10px' }}>Balance Due: {getCurrencySymbol(invoice.currency)} {balanceDue.toFixed(2)}</h4>
+
+                                {invoice.signatureUrl && (
+                                    <div style={{ marginTop: '40px', textAlign: 'center' }}>
+                                        <img src={invoice.signatureUrl} alt="Signature" style={{ maxHeight: '60px', maxWidth: '150px', objectFit: 'contain', borderBottom: '1px solid #ccc', paddingBottom: '5px' }} />
+                                        <p style={{ margin: '5px 0 0 0', fontSize: '0.9rem', color: '#666' }}>Authorized Signature</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

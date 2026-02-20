@@ -35,9 +35,22 @@ const getCurrencySymbol = (currency) => {
 // @access  Private
 router.post('/', auth, async (req, res) => {
     console.log('POST /api/invoices request body:', req.body);
-    const { clientName, clientEmail, businessName, businessGST, clientGST, items, gstRate, total, status, dueDate, currency } = req.body;
+    const { clientName, clientEmail, businessName, businessGST, clientGST, items, gstRate, total, status, dueDate, currency, invoiceNumber, termsAndConditions, logoUrl, signatureUrl, bankDetails } = req.body;
 
     try {
+        let finalInvoiceNumber = invoiceNumber;
+        const userDoc = await require('../models/User').findById(req.user.id);
+
+        if (!finalInvoiceNumber && userDoc && userDoc.settings?.autoIncrement) {
+            const prefix = userDoc.settings.invoicePrefix || 'INV-';
+            const num = userDoc.settings.nextInvoiceNumber || 1;
+            finalInvoiceNumber = `${prefix}${num.toString().padStart(3, '0')}`;
+
+            // Increment for next time
+            userDoc.settings.nextInvoiceNumber = num + 1;
+            await userDoc.save();
+        }
+
         const newInvoice = new Invoice({
             clientName,
             clientEmail,
@@ -50,6 +63,11 @@ router.post('/', auth, async (req, res) => {
             status,
             dueDate,
             currency,
+            invoiceNumber: finalInvoiceNumber,
+            termsAndConditions,
+            logoUrl,
+            signatureUrl,
+            bankDetails,
             user: req.user.id
         });
 
@@ -146,7 +164,7 @@ router.post('/', auth, async (req, res) => {
 // @desc    Update invoice
 // @access  Private
 router.put('/:id', auth, async (req, res) => {
-    const { clientName, clientEmail, businessName, businessGST, clientGST, items, gstRate, total, status, dueDate, currency } = req.body;
+    const { clientName, clientEmail, businessName, businessGST, clientGST, items, gstRate, total, status, dueDate, currency, invoiceNumber, termsAndConditions, logoUrl, signatureUrl, bankDetails } = req.body;
 
     // Build invoice object
     const invoiceFields = {};
@@ -161,6 +179,11 @@ router.put('/:id', auth, async (req, res) => {
     if (status) invoiceFields.status = status;
     if (dueDate) invoiceFields.dueDate = dueDate;
     if (currency) invoiceFields.currency = currency;
+    if (invoiceNumber) invoiceFields.invoiceNumber = invoiceNumber;
+    if (termsAndConditions !== undefined) invoiceFields.termsAndConditions = termsAndConditions;
+    if (logoUrl !== undefined) invoiceFields.logoUrl = logoUrl;
+    if (signatureUrl !== undefined) invoiceFields.signatureUrl = signatureUrl;
+    if (bankDetails) invoiceFields.bankDetails = bankDetails;
 
     try {
         let invoice = await Invoice.findById(req.params.id);

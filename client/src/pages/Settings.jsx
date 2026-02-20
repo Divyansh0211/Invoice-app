@@ -6,6 +6,8 @@ const Settings = () => {
     const { user, updateProfile, changePassword, generate2FA, verify2FA, disable2FA } = authContext;
 
     const [activeTab, setActiveTab] = useState('profile');
+    const [isSubmittingProfile, setIsSubmittingProfile] = useState(false);
+    const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
 
     // Profile & Site Settings Data
     const [formData, setFormData] = useState({
@@ -15,12 +17,31 @@ const Settings = () => {
         address: '',
         businessName: '',
         website: '',
+        logoUrl: '',
+        panNumber: '',
+        bankAccountNo: '',
+        bankIfsc: '',
+        bankUpiId: '',
         currency: 'USD',
         themeColor: '#6a1b9a',
-        taxRate: 0
+        taxRate: 0,
+        themeMode: 'light',
+        enableTax: true,
+        taxType: 'GST',
+        decimalPrecision: 2,
+        invoicePrefix: 'INV-',
+        autoIncrement: true,
+        defaultDueDays: 7,
+        termsAndConditions: 'Payment is due within {defaultDueDays} days. Please make checks payable to our company.',
+        signatureUrl: ''
     });
 
-    const { name, email, phoneNumber, address, businessName, website, currency, themeColor, taxRate } = formData;
+    const {
+        name, email, phoneNumber, address, businessName, website,
+        logoUrl, panNumber, bankAccountNo, bankIfsc, bankUpiId,
+        currency, themeColor, taxRate, themeMode,
+        enableTax, taxType, decimalPrecision, invoicePrefix, autoIncrement, defaultDueDays, termsAndConditions, signatureUrl
+    } = formData;
 
     // Change Password Data
     const [passwordData, setPasswordData] = useState({
@@ -46,9 +67,23 @@ const Settings = () => {
                 address: user.address || '',
                 businessName: user.businessName || '',
                 website: user.website || '',
+                logoUrl: user.logoUrl || '',
+                panNumber: user.panNumber || '',
+                bankAccountNo: user.bankDetails?.accountNo || '',
+                bankIfsc: user.bankDetails?.ifsc || '',
+                bankUpiId: user.bankDetails?.upiId || '',
                 currency: user.settings?.currency || 'USD',
                 themeColor: user.settings?.themeColor || '#6a1b9a',
-                taxRate: user.settings?.taxRate || 0
+                taxRate: user.settings?.taxRate || 0,
+                themeMode: user.settings?.themeMode || 'light',
+                enableTax: user.settings?.enableTax !== false,
+                taxType: user.settings?.taxType || 'GST',
+                decimalPrecision: user.settings?.decimalPrecision || 2,
+                invoicePrefix: user.settings?.invoicePrefix || 'INV-',
+                autoIncrement: user.settings?.autoIncrement !== false,
+                defaultDueDays: user.settings?.defaultDueDays || 7,
+                termsAndConditions: user.settings?.termsAndConditions || 'Payment is due within {defaultDueDays} days. Please make checks payable to our company.',
+                signatureUrl: user.settings?.signatureUrl || ''
             });
             setOtpEnabled(user.isTwoFactorEnabled);
         }
@@ -59,17 +94,42 @@ const Settings = () => {
 
     const onSubmitProfile = async e => {
         e.preventDefault();
+        setIsSubmittingProfile(true);
         const updatedProfile = {
             name,
             phoneNumber,
             address,
             businessName,
             website,
-            settings: { currency, themeColor, taxRate }
+            logoUrl,
+            panNumber,
+            bankDetails: {
+                accountNo: bankAccountNo,
+                ifsc: bankIfsc,
+                upiId: bankUpiId
+            },
+            settings: {
+                currency,
+                themeColor,
+                taxRate,
+                themeMode,
+                enableTax,
+                taxType,
+                decimalPrecision,
+                invoicePrefix,
+                autoIncrement,
+                defaultDueDays,
+                termsAndConditions,
+                signatureUrl
+            }
         };
-        const res = await updateProfile(updatedProfile);
-        if (res.success) alert('Settings Updated Successfully');
-        else alert('Update Failed');
+        try {
+            const res = await updateProfile(updatedProfile);
+            if (res.success) alert('Settings Updated Successfully');
+            else alert('Update Failed');
+        } finally {
+            setIsSubmittingProfile(false);
+        }
     };
 
     const onSubmitPassword = async e => {
@@ -78,12 +138,17 @@ const Settings = () => {
             alert('New passwords do not match');
             return;
         }
-        const res = await changePassword(currentPassword, newPassword);
-        if (res.success) {
-            alert('Password Changed Successfully');
-            setPasswordData({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
-        } else {
-            alert(res.msg);
+        setIsSubmittingPassword(true);
+        try {
+            const res = await changePassword(currentPassword, newPassword);
+            if (res.success) {
+                alert('Password Changed Successfully');
+                setPasswordData({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
+            } else {
+                alert(res.msg);
+            }
+        } finally {
+            setIsSubmittingPassword(false);
         }
     };
 
@@ -134,7 +199,14 @@ const Settings = () => {
                     onClick={() => setActiveTab('profile')}
                     style={{ marginRight: '10px', borderRadius: '5px 5px 0 0' }}
                 >
-                    Profile & Site
+                    Business Profile
+                </button>
+                <button
+                    className={`btn ${activeTab === 'invoice' ? 'btn-primary' : 'btn-light'}`}
+                    onClick={() => setActiveTab('invoice')}
+                    style={{ marginRight: '10px', borderRadius: '5px 5px 0 0' }}
+                >
+                    Invoice & Tax
                 </button>
                 <button
                     className={`btn ${activeTab === 'security' ? 'btn-primary' : 'btn-light'}`}
@@ -148,53 +220,177 @@ const Settings = () => {
             {activeTab === 'profile' && (
                 <form className="form" onSubmit={onSubmitProfile}>
                     <div className="card bg-light">
-                        <h3>Edit Profile</h3>
-                        <div className="form-group">
-                            <label>Name</label>
-                            <input type="text" name="name" value={name} onChange={onChange} required />
+                        <h3>Company Information</h3>
+                        <div className="grid-2">
+                            <div className="form-group">
+                                <label>Business Name</label>
+                                <input type="text" name="businessName" value={businessName} onChange={onChange} placeholder="Enter business name" />
+                            </div>
+                            <div className="form-group">
+                                <label>Your Name</label>
+                                <input type="text" name="name" value={name} onChange={onChange} required />
+                            </div>
                         </div>
-                        <div className="form-group">
-                            <label>Email (Cannot be changed)</label>
-                            <input type="email" name="email" value={email} disabled />
-                        </div>
-                        <div className="form-group">
-                            <label>Phone Number</label>
-                            <input type="text" name="phoneNumber" value={phoneNumber} onChange={onChange} placeholder="Enter phone number" />
+                        <div className="grid-2">
+                            <div className="form-group">
+                                <label>Email (Cannot be changed)</label>
+                                <input type="email" name="email" value={email} disabled />
+                            </div>
+                            <div className="form-group">
+                                <label>Phone Number</label>
+                                <input type="text" name="phoneNumber" value={phoneNumber} onChange={onChange} placeholder="Enter phone number" />
+                            </div>
                         </div>
                         <div className="form-group">
                             <label>Address</label>
                             <input type="text" name="address" value={address} onChange={onChange} placeholder="Enter address" />
                         </div>
-                        <div className="form-group">
-                            <label>Business Name</label>
-                            <input type="text" name="businessName" value={businessName} onChange={onChange} placeholder="Enter business name" />
-                        </div>
-                        <div className="form-group">
-                            <label>Website</label>
-                            <input type="text" name="website" value={website} onChange={onChange} placeholder="Enter website URL" />
+                        <div className="grid-2">
+                            <div className="form-group">
+                                <label>Website</label>
+                                <input type="text" name="website" value={website} onChange={onChange} placeholder="Enter website URL" />
+                            </div>
+                            <div className="form-group">
+                                <label>Logo URL</label>
+                                <input type="text" name="logoUrl" value={logoUrl} onChange={onChange} placeholder="https://example.com/logo.png" />
+                            </div>
                         </div>
                     </div>
+
                     <div className="card bg-light my-2">
-                        <h3>Site Settings</h3>
-                        <div className="form-group">
-                            <label>Currency</label>
-                            <select name="currency" value={currency} onChange={onChange} style={{ width: '100%', padding: '0.4rem', fontSize: '1.2rem', border: '1px solid #ccc' }}>
-                                <option value="USD">USD ($)</option>
-                                <option value="EUR">EUR (€)</option>
-                                <option value="GBP">GBP (£)</option>
-                                <option value="INR">INR (₹)</option>
-                                <option value="JPY">JPY (¥)</option>
-                            </select>
+                        <h3>Tax & Registration Details</h3>
+                        <div className="grid-2">
+                            <div className="form-group">
+                                <label>PAN Number (India)</label>
+                                <input type="text" name="panNumber" value={panNumber} onChange={onChange} placeholder="ABCDE1234F" />
+                            </div>
+                            <div className="form-group">
+                                <label>GST / Tax ID</label>
+                                <span className="text-secondary" style={{ display: 'block', fontSize: '0.8rem', marginBottom: '5px' }}>The GSTIN is saved on the Invoice form currently. This will be migrated soon.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="card bg-light my-2">
+                        <h3>Bank Details <small className="text-secondary">(Auto-fills on invoices)</small></h3>
+                        <div className="grid-3">
+                            <div className="form-group">
+                                <label>Account Number</label>
+                                <input type="text" name="bankAccountNo" value={bankAccountNo} onChange={onChange} placeholder="Account No" />
+                            </div>
+                            <div className="form-group">
+                                <label>IFSC Code</label>
+                                <input type="text" name="bankIfsc" value={bankIfsc} onChange={onChange} placeholder="Bank IFSC" />
+                            </div>
+                            <div className="form-group">
+                                <label>UPI ID</label>
+                                <input type="text" name="bankUpiId" value={bankUpiId} onChange={onChange} placeholder="yourname@bank" />
+                            </div>
+                        </div>
+                        <br />
+                        <input type="submit" value={isSubmittingProfile ? "Saving..." : "Save Business Profile"} className="btn btn-primary" disabled={isSubmittingProfile} />
+                    </div>
+                </form>
+            )}
+
+            {activeTab === 'invoice' && (
+                <form className="form" onSubmit={onSubmitProfile}>
+                    <div className="card bg-light">
+                        <h3>Tax & Currency Settings</h3>
+                        <div className="grid-3">
+                            <div className="form-group">
+                                <label>Currency</label>
+                                <select name="currency" value={currency} onChange={onChange} style={{ width: '100%', padding: '0.4rem', fontSize: '1.2rem', base: '1px solid #ccc' }}>
+                                    <option value="USD">USD ($)</option>
+                                    <option value="EUR">EUR (€)</option>
+                                    <option value="GBP">GBP (£)</option>
+                                    <option value="INR">INR (₹)</option>
+                                    <option value="JPY">JPY (¥)</option>
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Tax Type</label>
+                                <select name="taxType" value={taxType} onChange={onChange} style={{ width: '100%', padding: '0.4rem', fontSize: '1.2rem', base: '1px solid #ccc' }}>
+                                    <option value="GST">GST</option>
+                                    <option value="VAT">VAT</option>
+                                    <option value="IGST">IGST</option>
+                                    <option value="CGST/SGST">CGST / SGST</option>
+                                    <option value="Tax">General Tax</option>
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Default Tax Rate (%)</label>
+                                <input type="number" name="taxRate" value={taxRate} onChange={onChange} min="0" step="0.1" />
+                            </div>
+                        </div>
+                        <div className="grid-2">
+                            <div className="form-group">
+                                <label>
+                                    <input type="checkbox" name="enableTax" checked={enableTax} onChange={(e) => setFormData({ ...formData, enableTax: e.target.checked })} /> Enable Tax on Invoices
+                                </label>
+                            </div>
+                            <div className="form-group">
+                                <label>Decimal Precision</label>
+                                <select name="decimalPrecision" value={decimalPrecision} onChange={onChange} style={{ width: '100%', padding: '0.4rem', fontSize: '1.2rem', base: '1px solid #ccc' }}>
+                                    <option value={0}>0 (No decimals)</option>
+                                    <option value={2}>2 (e.g., 10.50)</option>
+                                    <option value={3}>3 (e.g., 10.500)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="card bg-light my-2">
+                        <h3>Invoice Preferences</h3>
+                        <div className="grid-3">
+                            <div className="form-group">
+                                <label>Invoice Prefix</label>
+                                <input type="text" name="invoicePrefix" value={invoicePrefix} onChange={onChange} placeholder="INV-" />
+                            </div>
+                            <div className="form-group" style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+                                <label>
+                                    <input type="checkbox" name="autoIncrement" checked={autoIncrement} onChange={(e) => setFormData({ ...formData, autoIncrement: e.target.checked })} /> Auto Increment
+                                </label>
+                            </div>
+                            <div className="form-group">
+                                <label>Default Due Days</label>
+                                <select name="defaultDueDays" value={defaultDueDays} onChange={onChange} style={{ width: '100%', padding: '0.4rem', fontSize: '1.2rem', base: '1px solid #ccc' }}>
+                                    <option value={0}>Due on Receipt</option>
+                                    <option value={7}>7 Days</option>
+                                    <option value={15}>15 Days</option>
+                                    <option value={30}>30 Days</option>
+                                    <option value={45}>45 Days</option>
+                                </select>
+                            </div>
                         </div>
                         <div className="form-group">
-                            <label>Theme Color</label>
-                            <input type="color" name="themeColor" value={themeColor} onChange={onChange} style={{ width: '100%', height: '40px' }} />
+                            <label>Default Terms & Conditions</label>
+                            <textarea name="termsAndConditions" value={termsAndConditions} onChange={onChange} rows="3"></textarea>
+                            <small className="text-secondary">Use {"{defaultDueDays}"} to inject the due days automatically.</small>
                         </div>
                         <div className="form-group">
-                            <label>Default GST/Tax Rate (%)</label>
-                            <input type="number" name="taxRate" value={taxRate} onChange={onChange} min="0" step="0.1" />
+                            <label>Signature URL</label>
+                            <input type="text" name="signatureUrl" value={signatureUrl} onChange={onChange} placeholder="https://example.com/signature.png" />
                         </div>
-                        <input type="submit" value="Save Settings" className="btn btn-primary" />
+                    </div>
+
+                    <div className="card bg-light my-2">
+                        <h3>Appearance Settings</h3>
+                        <div className="grid-2">
+                            <div className="form-group">
+                                <label>Theme Color</label>
+                                <input type="color" name="themeColor" value={themeColor} onChange={onChange} style={{ width: '100%', height: '40px' }} />
+                            </div>
+                            <div className="form-group">
+                                <label>App Theme Mode</label>
+                                <select name="themeMode" value={themeMode} onChange={onChange} style={{ width: '100%', padding: '0.4rem', fontSize: '1.2rem', base: '1px solid #ccc' }}>
+                                    <option value="light">Light Mode</option>
+                                    <option value="dark">Dark Mode</option>
+                                </select>
+                            </div>
+                        </div>
+                        <br />
+                        <input type="submit" value={isSubmittingProfile ? "Saving..." : "Save Preferences"} className="btn btn-primary" disabled={isSubmittingProfile} />
                     </div>
                 </form>
             )}
@@ -216,7 +412,7 @@ const Settings = () => {
                                 <label>Confirm New Password</label>
                                 <input type="password" name="confirmNewPassword" value={confirmNewPassword} onChange={onPasswordChange} required minLength="6" />
                             </div>
-                            <input type="submit" value="Update Password" className="btn btn-dark" />
+                            <input type="submit" value={isSubmittingPassword ? "Updating..." : "Update Password"} className="btn btn-dark" disabled={isSubmittingPassword} />
                         </form>
                     </div>
 

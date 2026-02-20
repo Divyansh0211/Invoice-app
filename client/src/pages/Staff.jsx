@@ -10,6 +10,7 @@ const Staff = () => {
     });
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState(null);
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
 
     const { name, email, role } = formData;
 
@@ -32,6 +33,7 @@ const Staff = () => {
 
     const onSubmit = async e => {
         e.preventDefault();
+        setIsSubmitting(true);
         try {
             const config = {
                 headers: {
@@ -44,6 +46,8 @@ const Staff = () => {
             setFormData({ name: '', email: '', role: 'Employee' });
         } catch (err) {
             setError(err.response && err.response.data.msg ? err.response.data.msg : 'Failed to add staff');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -74,7 +78,7 @@ const Staff = () => {
                     <div className="form-group">
                         <input type="text" placeholder="Role (e.g. Manager, Developer)" name="role" value={role} onChange={onChange} />
                     </div>
-                    <input type="submit" className="btn btn-primary" value="Add Staff" />
+                    <input type="submit" className="btn btn-primary" value={isSubmitting ? "Adding..." : "Add Staff"} disabled={isSubmitting} />
                 </form>
             </div>
 

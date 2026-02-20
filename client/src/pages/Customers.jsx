@@ -4,6 +4,7 @@ import axios from 'axios';
 const Customers = () => {
     const [customers, setCustomers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -30,12 +31,15 @@ const Customers = () => {
 
     const onSubmit = async e => {
         e.preventDefault();
+        setIsSubmitting(true);
         try {
             await axios.post('/api/customers', formData);
             setFormData({ name: '', email: '', gst: '', address: '' });
             getCustomers();
         } catch (err) {
             console.error(err);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -72,7 +76,7 @@ const Customers = () => {
                             <label>Address</label>
                             <input type="text" name="address" value={address} onChange={onChange} />
                         </div>
-                        <input type="submit" value="Add Customer" className="btn btn-primary btn-block" />
+                        <input type="submit" value={isSubmitting ? "Adding..." : "Add Customer"} className="btn btn-primary btn-block" disabled={isSubmitting} />
                     </form>
                 </div>
             </div>

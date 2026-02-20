@@ -22,19 +22,42 @@ const InvoiceForm = () => {
         currency: user?.settings?.currency || 'USD',
         dueDate: '',
         discountRate: 0,
+        invoiceNumber: '',
+        termsAndConditions: '',
+        logoUrl: '',
+        signatureUrl: '',
+        bankDetails: { accountNo: '', ifsc: '', upiId: '' },
         items: [{ description: '', quantity: 1, price: 0 }]
     });
 
     const [customers, setCustomers] = useState([]);
     const [products, setProducts] = useState([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const { clientName, clientEmail, businessName, businessGST, clientGST, gstRate, status, currency, dueDate, discountRate, items } = invoice;
+    const { clientName, clientEmail, businessName, businessGST, clientGST, gstRate, status, currency, dueDate, discountRate, invoiceNumber, termsAndConditions, logoUrl, signatureUrl, bankDetails, items } = invoice;
 
     useEffect(() => {
         if (id) {
             getInvoice(id);
-        } else if (user && user.settings) {
-            setInvoice(prev => ({ ...prev, currency: user.settings.currency || 'USD' }));
+        } else if (user) {
+            let defaultDays = user.settings?.defaultDueDays || 7;
+            let dDate = new Date();
+            dDate.setDate(dDate.getDate() + defaultDays);
+
+            let terms = user.settings?.termsAndConditions || '';
+            terms = terms.replace('{defaultDueDays}', defaultDays);
+
+            setInvoice(prev => ({
+                ...prev,
+                currency: user.settings?.currency || 'USD',
+                businessName: user.businessName || '',
+                gstRate: user.settings?.enableTax === false ? 0 : (user.settings?.taxRate || 0),
+                dueDate: dDate.toISOString().split('T')[0],
+                termsAndConditions: terms,
+                logoUrl: user.logoUrl || '',
+                signatureUrl: user.settings?.signatureUrl || '',
+                bankDetails: user.bankDetails || { accountNo: '', ifsc: '', upiId: '' }
+            }));
         }
         getCustomers();
         getProducts();
@@ -137,6 +160,7 @@ const InvoiceForm = () => {
 
     const onSubmit = async e => {
         e.preventDefault();
+        setIsSubmitting(true);
         const total = calculateTotal();
         const formData = { ...invoice, total };
 
@@ -155,6 +179,8 @@ const InvoiceForm = () => {
             navigate('/');
         } catch (err) {
             console.error(err);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -261,6 +287,44 @@ const InvoiceForm = () => {
                     </div>
                 </div>
 
+                <h3>Additional Details</h3>
+                <div className="grid-2">
+                    <div className="form-group">
+                        <label>Invoice Number (Optional)</label>
+                        <input type="text" name="invoiceNumber" value={invoiceNumber} onChange={onChange} placeholder="Auto-generated if blank" />
+                    </div>
+                    <div className="form-group">
+                        <label>Logo URL (Optional)</label>
+                        <input type="text" name="logoUrl" value={logoUrl} onChange={onChange} placeholder="https://example.com/logo.png" />
+                    </div>
+                </div>
+                <div className="grid-2">
+                    <div className="form-group">
+                        <label>Terms & Conditions (Optional)</label>
+                        <textarea name="termsAndConditions" value={termsAndConditions} onChange={onChange} rows="2"></textarea>
+                    </div>
+                    <div className="form-group">
+                        <label>Signature URL (Optional)</label>
+                        <input type="text" name="signatureUrl" value={signatureUrl} onChange={onChange} placeholder="https://.../sig.png" />
+                    </div>
+                </div>
+
+                <h3>Bank Details</h3>
+                <div className="grid-3">
+                    <div className="form-group">
+                        <label>Account Number</label>
+                        <input type="text" name="accountNo" value={bankDetails?.accountNo || ''} onChange={(e) => setInvoice({ ...invoice, bankDetails: { ...bankDetails, accountNo: e.target.value } })} />
+                    </div>
+                    <div className="form-group">
+                        <label>IFSC Code</label>
+                        <input type="text" name="ifsc" value={bankDetails?.ifsc || ''} onChange={(e) => setInvoice({ ...invoice, bankDetails: { ...bankDetails, ifsc: e.target.value } })} />
+                    </div>
+                    <div className="form-group">
+                        <label>UPI ID</label>
+                        <input type="text" name="upiId" value={bankDetails?.upiId || ''} onChange={(e) => setInvoice({ ...invoice, bankDetails: { ...bankDetails, upiId: e.target.value } })} />
+                    </div>
+                </div>
+
                 <h3>Items</h3>
                 {
                     items.map((item, index) => (
@@ -300,55 +364,94 @@ const InvoiceForm = () => {
                 }
                 <button type="button" onClick={addItem} className="btn btn-light my-1">+ Add Item</button>
 
-                <div id="invoice-preview" style={{ padding: '20px', border: '1px solid #ccc', margin: '20px 0', background: '#fff', color: '#333' }}>
-                    <div style={{ borderBottom: '2px solid #eee', paddingBottom: '10px', marginBottom: '20px' }}>
-                        <h2 style={{ color: '#333' }}>INVOICE</h2>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <div>
-                                <strong>From:</strong><br />
-                                {businessName || user?.name || 'Your Business'}<br />
-                                {businessGST && <span>GST: {businessGST}</span>}
-                            </div>
-                            <div style={{ textAlign: 'right' }}>
-                                <strong>To:</strong><br />
-                                {clientName}<br />
-                                {clientEmail}<br />
-                                {clientGST && <span>GST: {clientGST}</span>}
-                            </div>
+                <div id="invoice-preview" style={{ padding: '30px', border: '1px solid #ccc', margin: '20px 0', background: '#fff', color: '#333', position: 'relative' }}>
+                    {/* Watermark Logic */}
+                    {(status === 'Paid' || status === 'Overdue' || !id) && (
+                        <div style={{
+                            position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-45deg)',
+                            fontSize: '8rem', color: status === 'Paid' ? 'rgba(5,205,153,0.1)' : status === 'Overdue' ? 'rgba(238,93,80,0.1)' : 'rgba(0,0,0,0.05)',
+                            fontWeight: 'bold', zIndex: 0, pointerEvents: 'none', whiteSpace: 'nowrap'
+                        }}>
+                            {status === 'Paid' ? 'PAID' : status === 'Overdue' ? 'OVERDUE' : 'DRAFT'}
+                        </div>
+                    )}
+
+                    <div style={{ borderBottom: '2px solid #eee', paddingBottom: '20px', marginBottom: '20px', position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                            {logoUrl && <img src={logoUrl} alt="Logo" style={{ maxHeight: '80px', maxWidth: '200px', objectFit: 'contain', marginBottom: '10px' }} />}
+                            <h2 style={{ color: '#333', margin: '0 0 5px 0' }}>INVOICE {invoiceNumber ? `#${invoiceNumber}` : `(Auto-generated)`}</h2>
+                            <p style={{ margin: 0, color: '#666' }}>Date: {new Date().toLocaleDateString()}</p>
+                            {dueDate && <p style={{ margin: 0, color: '#666' }}>Due Date: {new Date(dueDate).toLocaleDateString()}</p>}
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                            <strong>From:</strong><br />
+                            <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{businessName || user?.name || 'Your Business'}</span><br />
+                            {businessGST && <span>GST/Tax ID: {businessGST}</span>}
                         </div>
                     </div>
 
-                    <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px' }}>
+                    <div style={{ marginBottom: '30px', position: 'relative', zIndex: 1 }}>
+                        <strong>Billed To:</strong><br />
+                        <span style={{ fontSize: '1.2rem' }}>{clientName}</span><br />
+                        {clientEmail}<br />
+                        {clientGST && <span>GST/Tax ID: {clientGST}</span>}
+                    </div>
+
+                    <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px', position: 'relative', zIndex: 1 }}>
                         <thead>
-                            <tr style={{ borderBottom: '1px solid #ddd', textAlign: 'left' }}>
-                                <th style={{ padding: '10px' }}>Item</th>
-                                <th style={{ padding: '10px' }}>Qty</th>
-                                <th style={{ padding: '10px' }}>Price</th>
-                                <th style={{ padding: '10px' }}>Total</th>
+                            <tr style={{ borderBottom: '2px solid #333', textAlign: 'left', backgroundColor: '#f9f9f9' }}>
+                                <th style={{ padding: '12px' }}>Item Description</th>
+                                <th style={{ padding: '12px', textAlign: 'center' }}>Qty</th>
+                                <th style={{ padding: '12px', textAlign: 'right' }}>Price</th>
+                                <th style={{ padding: '12px', textAlign: 'right' }}>Total</th>
                             </tr>
                         </thead>
                         <tbody>
                             {items.map((item, index) => (
                                 <tr key={index} style={{ borderBottom: '1px solid #eee' }}>
-                                    <td style={{ padding: '10px' }}>{item.description}</td>
-                                    <td style={{ padding: '10px' }}>{item.quantity}</td>
-
-                                    <td style={{ padding: '10px' }}>{currency} {item.price}</td>
-                                    <td style={{ padding: '10px' }}>{currency} {item.quantity * item.price}</td>
+                                    <td style={{ padding: '12px' }}>{item.description}</td>
+                                    <td style={{ padding: '12px', textAlign: 'center' }}>{item.quantity}</td>
+                                    <td style={{ padding: '12px', textAlign: 'right' }}>{currency} {Number(item.price).toFixed(user?.settings?.decimalPrecision || 2)}</td>
+                                    <td style={{ padding: '12px', textAlign: 'right' }}>{currency} {(item.quantity * item.price).toFixed(user?.settings?.decimalPrecision || 2)}</td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
 
-                    <div style={{ textAlign: 'right' }}>
-                        <p>Subtotal: {currency} {calculateSubTotal()}</p>
-                        <p>Discount ({discountRate}%): {currency} {((calculateSubTotal() * (discountRate || 0)) / 100).toFixed(2)}</p>
-                        <p>GST ({gstRate}%): {currency} {(((calculateSubTotal() - ((calculateSubTotal() * (discountRate || 0)) / 100)) * gstRate) / 100).toFixed(2)}</p>
-                        <h3>Total: {currency} {calculateTotal().toFixed(2)}</h3>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '30px', position: 'relative', zIndex: 1 }}>
+                        <div style={{ flex: 1, paddingRight: '20px' }}>
+                            {(bankDetails?.accountNo || bankDetails?.ifsc || bankDetails?.upiId) && (
+                                <div style={{ marginBottom: '20px' }}>
+                                    <strong>Bank Details:</strong>
+                                    {bankDetails.accountNo && <p style={{ margin: 0 }}>Account No: {bankDetails.accountNo}</p>}
+                                    {bankDetails.ifsc && <p style={{ margin: 0 }}>IFSC: {bankDetails.ifsc}</p>}
+                                    {bankDetails.upiId && <p style={{ margin: 0 }}>UPI: {bankDetails.upiId}</p>}
+                                </div>
+                            )}
+                            {termsAndConditions && (
+                                <div>
+                                    <strong>Terms & Conditions:</strong>
+                                    <p style={{ margin: 0, fontSize: '0.9rem', color: '#555', whiteSpace: 'pre-wrap' }}>{termsAndConditions}</p>
+                                </div>
+                            )}
+                        </div>
+                        <div style={{ flex: 0.8, textAlign: 'right' }}>
+                            <p style={{ margin: '5px 0' }}>Subtotal: {currency} {calculateSubTotal().toFixed(user?.settings?.decimalPrecision || 2)}</p>
+                            {discountRate > 0 && <p style={{ margin: '5px 0', color: '#d9534f' }}>Discount ({discountRate}%): -{currency} {((calculateSubTotal() * discountRate) / 100).toFixed(user?.settings?.decimalPrecision || 2)}</p>}
+                            {gstRate > 0 && <p style={{ margin: '5px 0' }}>{user?.settings?.taxType || 'Tax'} ({gstRate}%): {currency} {(((calculateSubTotal() - ((calculateSubTotal() * discountRate) / 100)) * gstRate) / 100).toFixed(user?.settings?.decimalPrecision || 2)}</p>}
+                            <h3 style={{ marginTop: '15px', borderTop: '2px solid #333', paddingTop: '10px' }}>Total Amount: {currency} {calculateTotal().toFixed(user?.settings?.decimalPrecision || 2)}</h3>
+
+                            {signatureUrl && (
+                                <div style={{ marginTop: '40px', textAlign: 'center' }}>
+                                    <img src={signatureUrl} alt="Signature" style={{ maxHeight: '60px', maxWidth: '150px', objectFit: 'contain', borderBottom: '1px solid #ccc', paddingBottom: '5px' }} />
+                                    <p style={{ margin: '5px 0 0 0', fontSize: '0.9rem', color: '#666' }}>Authorized Signature</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
-                <input type="submit" value={id ? 'Update Invoice' : 'Create Invoice'} className="btn btn-primary btn-block" />
+                <input type="submit" value={isSubmitting ? 'Saving...' : (id ? 'Update Invoice' : 'Create Invoice')} className="btn btn-primary btn-block" disabled={isSubmitting} />
             </form >
         </div >
     );

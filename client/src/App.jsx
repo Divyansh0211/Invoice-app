@@ -45,9 +45,17 @@ const AppContent = () => {
     if (user) {
       console.log('App: User settings:', user.settings);
     }
-    if (user && user.settings && user.settings.themeColor) {
-      console.log('App: Applying theme color:', user.settings.themeColor);
-      document.documentElement.style.setProperty('--primary-color', user.settings.themeColor);
+    if (user && user.settings) {
+      if (user.settings.themeColor) {
+        console.log('App: Applying theme color:', user.settings.themeColor);
+        document.documentElement.style.setProperty('--primary-color', user.settings.themeColor);
+      }
+
+      if (user.settings.themeMode === 'dark') {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
     }
   }, [user]);
 

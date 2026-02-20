@@ -514,7 +514,7 @@ router.put('/profile', require('../middleware/auth'), async (req, res) => {
 
 
 
-    const { name, phoneNumber, address, businessName, website, settings, productClasses } = req.body;
+    const { name, phoneNumber, address, businessName, website, settings, productClasses, logoUrl, panNumber, bankDetails } = req.body;
 
     // Build user object
     const profileFields = {};
@@ -527,8 +527,9 @@ router.put('/profile', require('../middleware/auth'), async (req, res) => {
     if (productClasses) {
         profileFields.productClasses = productClasses;
     }
-
-
+    if (logoUrl !== undefined) profileFields.logoUrl = logoUrl;
+    if (panNumber !== undefined) profileFields.panNumber = panNumber;
+    if (bankDetails) profileFields.bankDetails = bankDetails;
 
     try {
         let user = await User.findById(req.user.id);

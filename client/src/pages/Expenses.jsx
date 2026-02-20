@@ -8,6 +8,7 @@ const Expenses = () => {
     const authContext = useContext(AuthContext);
     const { user } = authContext;
     const [expenses, setExpenses] = useState([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         amount: '',
         category: '',
@@ -35,6 +36,7 @@ const Expenses = () => {
 
     const onSubmit = async e => {
         e.preventDefault();
+        setIsSubmitting(true);
         try {
             await axios.post('/api/expenses', formData);
             setFormData({
@@ -46,6 +48,8 @@ const Expenses = () => {
             getExpenses();
         } catch (err) {
             console.error(err);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -92,7 +96,7 @@ const Expenses = () => {
                             <label>Description</label>
                             <textarea name="description" value={description} onChange={onChange}></textarea>
                         </div>
-                        <input type="submit" value="Add Expense" className="btn btn-primary btn-block" />
+                        <input type="submit" value={isSubmitting ? "Adding..." : "Add Expense"} className="btn btn-primary btn-block" disabled={isSubmitting} />
                     </form>
                 </div>
             </div>
