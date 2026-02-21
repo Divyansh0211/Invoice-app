@@ -12,6 +12,9 @@ import Customers from './pages/Customers';
 import Products from './pages/Products';
 import Reports from './pages/Reports';
 import Invoices from './pages/Invoices';
+import Estimates from './pages/Estimates';
+import EstimateForm from './pages/EstimateForm';
+import EstimateDetails from './pages/EstimateDetails';
 import Staff from './pages/Staff';
 import Communication from './pages/Communication';
 import Expenses from './pages/Expenses';
@@ -76,6 +79,10 @@ const AppContent = () => {
             <Route path="/create-invoice" element={<InvoiceForm />} />
             <Route path="/edit-invoice/:id" element={<InvoiceForm />} />
             <Route path="/invoice/:id" element={<InvoiceDetails />} />
+            <Route path="/estimates" element={<Estimates />} />
+            <Route path="/create-estimate" element={<EstimateForm />} />
+            <Route path="/edit-estimate/:id" element={<EstimateForm />} />
+            <Route path="/estimate/:id" element={<EstimateDetails />} />
             <Route path="/customers" element={<Customers />} />
             <Route path="/staff" element={<Staff />} />
             <Route path="/communication" element={<Communication />} />

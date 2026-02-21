@@ -28,6 +28,11 @@ const Sidebar = () => {
                     </Link>
                 </li>
                 <li>
+                    <Link to="/estimates" className={isActive('/estimates')}>
+                        <i className="fas fa-file-signature"></i> Estimates
+                    </Link>
+                </li>
+                <li>
                     <Link to="/customers" className={isActive('/customers')}>
                         <i className="fas fa-users"></i> Clients
                     </Link>
