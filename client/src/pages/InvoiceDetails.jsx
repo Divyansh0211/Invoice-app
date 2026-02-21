@@ -19,6 +19,18 @@ const InvoiceDetails = () => {
 
     useEffect(() => {
         getInvoice();
+
+        // Check for success/canceled stripe params
+        const query = new URLSearchParams(window.location.search);
+        if (query.get('success')) {
+            alert('Payment initiated successfully! Please check status later or record payment manually if your webhook is not set up.');
+            // remove query params
+            window.history.replaceState(null, '', window.location.pathname);
+        }
+        if (query.get('canceled')) {
+            alert('Payment was canceled.');
+            window.history.replaceState(null, '', window.location.pathname);
+        }
     }, [id]);
 
     const getInvoice = async () => {
@@ -89,6 +101,18 @@ const InvoiceDetails = () => {
         }
     };
 
+    const handlePay = async () => {
+        try {
+            const res = await axios.post(`/api/invoices/${id}/create-checkout-session`);
+            if (res.data.url) {
+                window.location.href = res.data.url;
+            }
+        } catch (err) {
+            console.error(err);
+            alert(err.response?.data?.msg || 'Failed to initiate payment. Make sure Stripe is configured.');
+        }
+    };
+
     if (!invoice) return <div>Loading...</div>;
 
     const totalPaid = invoice.payments ? invoice.payments.reduce((acc, p) => acc + p.amount, 0) : 0;
@@ -107,6 +131,11 @@ const InvoiceDetails = () => {
                             {invoice.status !== 'Paid' && (
                                 <button onClick={sendReminder} className="btn btn-dark" style={{ marginRight: '10px' }}>
                                     <i className="fas fa-bell"></i> Send Reminder
+                                </button>
+                            )}
+                            {balanceDue > 0 && (
+                                <button onClick={handlePay} className="btn btn-success" style={{ marginRight: '10px', backgroundColor: '#28a745', color: 'white', border: 'none' }}>
+                                    Pay for Product
                                 </button>
                             )}
                             <button onClick={downloadPDF} className="btn btn-secondary">Download PDF</button>

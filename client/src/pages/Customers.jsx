@@ -5,6 +5,7 @@ const Customers = () => {
     const [customers, setCustomers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [dataFetched, setDataFetched] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -14,17 +15,38 @@ const Customers = () => {
 
     const { name, email, gst, address } = formData;
 
-    useEffect(() => {
-        getCustomers();
-    }, []);
-
     const getCustomers = async () => {
         try {
             const res = await axios.get('/api/customers');
             setCustomers(res.data);
+            setDataFetched(true);
         } catch (err) {
             console.error(err);
         }
+    };
+
+    const exportToCSV = () => {
+        if (customers.length === 0) return;
+
+        const headers = ['Name', 'Email', 'GSTIN', 'Address'];
+        const rows = customers.map(customer => [
+            `"${customer.name}"`,
+            `"${customer.email}"`,
+            `"${customer.gst || ''}"`,
+            `"${customer.address || ''}"`
+        ]);
+
+        const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'customers.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -35,7 +57,9 @@ const Customers = () => {
         try {
             await axios.post('/api/customers', formData);
             setFormData({ name: '', email: '', gst: '', address: '' });
-            getCustomers();
+            if (dataFetched) {
+                getCustomers();
+            }
         } catch (err) {
             console.error(err);
         } finally {
@@ -82,26 +106,38 @@ const Customers = () => {
             </div>
             <div>
                 <h3>Customers List</h3>
-                <input
-                    type="text"
-                    placeholder="Search by name or email..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="form-control mb-2"
-                    style={{ width: '100%', padding: '10px', marginBottom: '20px', borderRadius: '5px', border: '1px solid #ccc' }}
-                />
-                {customers.filter(customer =>
-                    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    customer.email.toLowerCase().includes(searchTerm.toLowerCase())
-                ).map(customer => (
-                    <div key={customer._id} className="card my-1">
-                        <h4>{customer.name}</h4>
-                        <p>{customer.email}</p>
-                        {customer.gst && <p>GST: {customer.gst}</p>}
-                        <button onClick={() => deleteCustomer(customer._id)} className="btn btn-danger btn-sm">Delete</button>
-                    </div>
-                ))}
-                {customers.length === 0 && <p>No customers found.</p>}
+                {!dataFetched ? (
+                    <button onClick={getCustomers} className="btn btn-primary" style={{ marginTop: '10px' }}>
+                        Fetch Customers
+                    </button>
+                ) : (
+                    <>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', marginTop: '10px' }}>
+                            <button onClick={getCustomers} className="btn btn-dark btn-sm">Refresh Data</button>
+                            <button onClick={exportToCSV} className="btn btn-success btn-sm" style={{ backgroundColor: '#28a745', color: '#fff', border: 'none' }}>Export to Excel</button>
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Search by name or email..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="form-control mb-2"
+                            style={{ width: '100%', padding: '10px', marginBottom: '20px', borderRadius: '5px', border: '1px solid #ccc' }}
+                        />
+                        {customers.filter(customer =>
+                            customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            customer.email.toLowerCase().includes(searchTerm.toLowerCase())
+                        ).map(customer => (
+                            <div key={customer._id} className="card my-1">
+                                <h4>{customer.name}</h4>
+                                <p>{customer.email}</p>
+                                {customer.gst && <p>GST: {customer.gst}</p>}
+                                <button onClick={() => deleteCustomer(customer._id)} className="btn btn-danger btn-sm">Delete</button>
+                            </div>
+                        ))}
+                        {customers.length === 0 && <p>No customers found.</p>}
+                    </>
+                )}
             </div>
         </div>
     );

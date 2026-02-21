@@ -486,5 +486,58 @@ router.post('/:id/remind', auth, async (req, res) => {
         res.status(500).send('Server Error');
     }
 });
+// @route   POST api/invoices/:id/create-checkout-session
+// @desc    Create Stripe Checkout Session
+// @access  Private
+router.post('/:id/create-checkout-session', auth, async (req, res) => {
+    try {
+        const invoice = await Invoice.findById(req.params.id);
+
+        if (!invoice) return res.status(404).json({ msg: 'Invoice not found' });
+
+        // Make sure user owns invoice
+        if (invoice.user.toString() !== req.user.id) {
+            return res.status(401).json({ msg: 'Not authorized' });
+        }
+
+        if (!process.env.STRIPE_SECRET_KEY) {
+            return res.status(400).json({ msg: 'Stripe Secret Key is not configured in the backend (.env).' });
+        }
+        const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+        const totalPaid = invoice.payments ? invoice.payments.reduce((acc, p) => acc + p.amount, 0) : 0;
+        const balanceDue = invoice.total - totalPaid;
+
+        if (balanceDue <= 0) {
+            return res.status(400).json({ msg: 'Invoice is already paid in full.' });
+        }
+
+        // Create Stripe checkout session
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            line_items: [
+                {
+                    price_data: {
+                        currency: invoice.currency.toLowerCase(),
+                        product_data: {
+                            name: `Invoice #${invoice.invoiceNumber || invoice._id}`,
+                            description: `Payment for ${invoice.businessName || 'Business'}`,
+                        },
+                        unit_amount: Math.round(balanceDue * 100), // Stripe expects amount in cents
+                    },
+                    quantity: 1,
+                },
+            ],
+            mode: 'payment',
+            success_url: `${req.headers.origin}/invoice/${invoice._id}?success=true`,
+            cancel_url: `${req.headers.origin}/invoice/${invoice._id}?canceled=true`,
+        });
+
+        res.json({ id: session.id, url: session.url });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error: ' + err.message);
+    }
+});
 
 module.exports = router;
