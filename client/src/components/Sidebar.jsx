@@ -74,11 +74,6 @@ const Sidebar = () => {
                 </li>
             </ul>
 
-            <div style={{ marginTop: 'auto', marginLeft: '-1rem', marginRight: '-1rem' }}>
-                <a onClick={logout} href="#!" className="text-danger" style={{ display: 'flex', alignItems: 'center', padding: '12px 20px', borderRadius: '0', fontWeight: '500', transition: 'all 0.2s', cursor: 'pointer', justifyContent: 'flex-start' }}>
-                    <i className="fas fa-sign-out-alt" style={{ marginRight: '15px', width: '20px', textAlign: 'center' }}></i> Logout
-                </a>
-            </div>
         </div >
     );
 };

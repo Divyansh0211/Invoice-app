@@ -4,6 +4,7 @@ import { useParams, Link } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { getCurrencySymbol } from '../utils/currencyMap';
+import PaymentModal from '../components/PaymentModal';
 
 const InvoiceDetails = () => {
     const { id } = useParams();
@@ -14,6 +15,7 @@ const InvoiceDetails = () => {
         method: 'Cash',
         note: ''
     });
+    const [payingInvoice, setPayingInvoice] = useState(null);
 
     const { amount, date, method, note } = paymentData;
 
@@ -102,14 +104,27 @@ const InvoiceDetails = () => {
     };
 
     const handlePay = async () => {
+        setPayingInvoice(invoice);
+    };
+
+    const handlePaymentSuccess = async (invoiceId) => {
         try {
-            const res = await axios.post(`/api/invoices/${id}/create-checkout-session`);
-            if (res.data.url) {
-                window.location.href = res.data.url;
-            }
+            // Wait for Modal delay, then just use our existing backend endpoint to register payment.
+            // In a real flow, this would hit Stripe/UPI callback, we'll hit our local payment API to mock.
+            const paymentPayload = {
+                amount: balanceDue,
+                date: new Date().toISOString().split('T')[0],
+                method: 'Online',
+                note: 'Paid via Client Portal / Direct Link'
+            };
+            await axios.post(`/api/invoices/${invoiceId}/payments`, paymentPayload, { headers: { 'Content-Type': 'application/json' } });
+
+            setPayingInvoice(null);
+            getInvoice(); // refresh data
+            alert('Payment successfully recorded!');
         } catch (err) {
             console.error(err);
-            alert(err.response?.data?.msg || 'Failed to initiate payment. Make sure Stripe is configured.');
+            alert('Failed to record payment');
         }
     };
 
@@ -280,6 +295,17 @@ const InvoiceDetails = () => {
                     ) : <p>No payments recorded.</p>}
                 </div>
             </div>
+
+            {payingInvoice && (
+                <PaymentModal
+                    invoice={{
+                        ...payingInvoice,
+                        currency: getCurrencySymbol(payingInvoice.currency) // PaymentModal expects standard string, but we can pass symbol
+                    }}
+                    onClose={() => setPayingInvoice(null)}
+                    onPaymentSuccess={handlePaymentSuccess}
+                />
+            )}
         </div>
     );
 };

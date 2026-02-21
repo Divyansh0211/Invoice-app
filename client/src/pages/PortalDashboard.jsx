@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import PaymentModal from '../components/PaymentModal';
 
 // We need a custom Axios instance because the portal uses `x-auth-token` 
 // differently from the main app, or we just pass the headers manually.
@@ -22,6 +23,7 @@ const PortalDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('invoices'); // 'invoices' or 'estimates'
     const [selectedDocument, setSelectedDocument] = useState(null); // to preview PDF
+    const [payingInvoice, setPayingInvoice] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -80,6 +82,22 @@ const PortalDashboard = () => {
     // For now we'll just show the details or let them download the simple representation.
     const downloadPDF = async (docType, docId) => {
         alert("In a production app, this would download the PDF for " + docType + " #" + docId + ". Implementing backend PDF generation for the portal is recommended for security and rendering consistency.");
+    };
+
+    const handlePaymentSuccess = async (invoiceId) => {
+        try {
+            // Ideally an API call here. We'll simply update local state to mock it.
+            setInvoices(invoices.map(inv => {
+                if (inv._id === invoiceId) {
+                    return { ...inv, status: 'Paid', payments: [{ amount: inv.total, date: new Date() }] };
+                }
+                return inv;
+            }));
+            setPayingInvoice(null);
+            alert("Payment successful! Invoice marked as paid.");
+        } catch (error) {
+            console.error(error);
+        }
     };
 
     if (loading) {
@@ -172,7 +190,7 @@ const PortalDashboard = () => {
                                                     <i className="fas fa-download"></i> PDF
                                                 </button>
                                                 {inv.status !== 'Paid' && (
-                                                    <button style={{ background: '#2ecc71', border: 'none', padding: '6px 15px', borderRadius: '4px', cursor: 'pointer', color: 'white', marginLeft: '10px', fontWeight: 'bold' }}>
+                                                    <button onClick={() => setPayingInvoice(inv)} style={{ background: '#2ecc71', border: 'none', padding: '6px 15px', borderRadius: '4px', cursor: 'pointer', color: 'white', marginLeft: '10px', fontWeight: 'bold' }}>
                                                         Pay {getCurrencySymbol(inv.currency)}{balance.toFixed(2)}
                                                     </button>
                                                 )}
@@ -210,6 +228,14 @@ const PortalDashboard = () => {
                     </div>
                 </div>
             </div>
+
+            {payingInvoice && (
+                <PaymentModal
+                    invoice={payingInvoice}
+                    onClose={() => setPayingInvoice(null)}
+                    onPaymentSuccess={handlePaymentSuccess}
+                />
+            )}
         </div>
     );
 };

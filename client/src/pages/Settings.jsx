@@ -3,7 +3,7 @@ import AuthContext from '../context/authContext';
 
 const Settings = () => {
     const authContext = useContext(AuthContext);
-    const { user, updateProfile, changePassword, generate2FA, verify2FA, disable2FA, switchWorkspace } = authContext;
+    const { user, updateProfile, changePassword, generate2FA, verify2FA, disable2FA, switchWorkspace, logout } = authContext;
 
     const [activeTab, setActiveTab] = useState('profile');
     const [isSubmittingProfile, setIsSubmittingProfile] = useState(false);
@@ -218,109 +218,122 @@ const Settings = () => {
             </div>
 
             {activeTab === 'profile' && (
-                <form className="form" onSubmit={onSubmitProfile}>
-                    <div className="card bg-light my-2">
-                        <h3>Workspace Switching</h3>
-                        <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '15px' }}>
-                            You can belong to multiple workspaces (e.g., your own personal workspace plus teams you've joined).
-                        </p>
-                        <div className="grid-2">
-                            <div className="form-group">
-                                <label>Current Active Workspace</label>
-                                <select
-                                    className="form-control"
-                                    value={user?.activeWorkspace?._id || user?.activeWorkspace || ''}
-                                    onChange={(e) => {
-                                        if (e.target.value !== user?.activeWorkspace?._id) {
-                                            switchWorkspace(e.target.value);
-                                        }
-                                    }}
-                                >
-                                    {user?.workspaces?.map((w, idx) => (
-                                        <option key={w.workspace._id || w.workspace || idx} value={w.workspace._id || w.workspace}>
-                                            Workspace {w.workspace._id || w.workspace} (Role: {w.role})
-                                        </option>
-                                    ))}
-                                </select>
-                                <small style={{ display: 'block', marginTop: '5px', color: 'var(--primary-color)' }}>
-                                    <strong>Note:</strong> Currently displaying workspace ID until we populate names.
-                                </small>
+                <>
+                    <form className="form" onSubmit={onSubmitProfile}>
+                        <div className="card bg-light my-2">
+                            <h3>Workspace Switching</h3>
+                            <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '15px' }}>
+                                You can belong to multiple workspaces (e.g., your own personal workspace plus teams you've joined).
+                            </p>
+                            <div className="grid-2">
+                                <div className="form-group">
+                                    <label>Current Active Workspace</label>
+                                    <select
+                                        className="form-control"
+                                        value={user?.activeWorkspace?._id || user?.activeWorkspace || ''}
+                                        onChange={(e) => {
+                                            if (e.target.value !== user?.activeWorkspace?._id) {
+                                                switchWorkspace(e.target.value);
+                                            }
+                                        }}
+                                    >
+                                        {user?.workspaces?.map((w, idx) => (
+                                            <option key={w.workspace._id || w.workspace || idx} value={w.workspace._id || w.workspace}>
+                                                Workspace {w.workspace._id || w.workspace} (Role: {w.role})
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <small style={{ display: 'block', marginTop: '5px', color: 'var(--primary-color)' }}>
+                                        <strong>Note:</strong> Currently displaying workspace ID until we populate names.
+                                    </small>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div className="card bg-light">
-                        <h3>Company Information</h3>
-                        <div className="grid-2">
-                            <div className="form-group">
-                                <label>Business Name</label>
-                                <input type="text" name="businessName" value={businessName} onChange={onChange} placeholder="Enter business name" />
+                        <div className="card bg-light">
+                            <h3>Company Information</h3>
+                            <div className="grid-2">
+                                <div className="form-group">
+                                    <label>Business Name</label>
+                                    <input type="text" name="businessName" value={businessName} onChange={onChange} placeholder="Enter business name" />
+                                </div>
+                                <div className="form-group">
+                                    <label>Your Name</label>
+                                    <input type="text" name="name" value={name} onChange={onChange} required />
+                                </div>
+                            </div>
+                            <div className="grid-2">
+                                <div className="form-group">
+                                    <label>Email (Cannot be changed)</label>
+                                    <input type="email" name="email" value={email} disabled />
+                                </div>
+                                <div className="form-group">
+                                    <label>Phone Number</label>
+                                    <input type="text" name="phoneNumber" value={phoneNumber} onChange={onChange} placeholder="Enter phone number" />
+                                </div>
                             </div>
                             <div className="form-group">
-                                <label>Your Name</label>
-                                <input type="text" name="name" value={name} onChange={onChange} required />
+                                <label>Address</label>
+                                <input type="text" name="address" value={address} onChange={onChange} placeholder="Enter address" />
+                            </div>
+                            <div className="grid-2">
+                                <div className="form-group">
+                                    <label>Website</label>
+                                    <input type="text" name="website" value={website} onChange={onChange} placeholder="Enter website URL" />
+                                </div>
+                                <div className="form-group">
+                                    <label>Logo URL</label>
+                                    <input type="text" name="logoUrl" value={logoUrl} onChange={onChange} placeholder="https://example.com/logo.png" />
+                                </div>
                             </div>
                         </div>
-                        <div className="grid-2">
-                            <div className="form-group">
-                                <label>Email (Cannot be changed)</label>
-                                <input type="email" name="email" value={email} disabled />
-                            </div>
-                            <div className="form-group">
-                                <label>Phone Number</label>
-                                <input type="text" name="phoneNumber" value={phoneNumber} onChange={onChange} placeholder="Enter phone number" />
-                            </div>
-                        </div>
-                        <div className="form-group">
-                            <label>Address</label>
-                            <input type="text" name="address" value={address} onChange={onChange} placeholder="Enter address" />
-                        </div>
-                        <div className="grid-2">
-                            <div className="form-group">
-                                <label>Website</label>
-                                <input type="text" name="website" value={website} onChange={onChange} placeholder="Enter website URL" />
-                            </div>
-                            <div className="form-group">
-                                <label>Logo URL</label>
-                                <input type="text" name="logoUrl" value={logoUrl} onChange={onChange} placeholder="https://example.com/logo.png" />
-                            </div>
-                        </div>
-                    </div>
 
-                    <div className="card bg-light my-2">
-                        <h3>Tax & Registration Details</h3>
-                        <div className="grid-2">
-                            <div className="form-group">
-                                <label>PAN Number (India)</label>
-                                <input type="text" name="panNumber" value={panNumber} onChange={onChange} placeholder="ABCDE1234F" />
-                            </div>
-                            <div className="form-group">
-                                <label>GST / Tax ID</label>
-                                <span className="text-secondary" style={{ display: 'block', fontSize: '0.8rem', marginBottom: '5px' }}>The GSTIN is saved on the Invoice form currently. This will be migrated soon.</span>
+                        <div className="card bg-light my-2">
+                            <h3>Tax & Registration Details</h3>
+                            <div className="grid-2">
+                                <div className="form-group">
+                                    <label>PAN Number (India)</label>
+                                    <input type="text" name="panNumber" value={panNumber} onChange={onChange} placeholder="ABCDE1234F" />
+                                </div>
+                                <div className="form-group">
+                                    <label>GST / Tax ID</label>
+                                    <span className="text-secondary" style={{ display: 'block', fontSize: '0.8rem', marginBottom: '5px' }}>The GSTIN is saved on the Invoice form currently. This will be migrated soon.</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div className="card bg-light my-2">
-                        <h3>Bank Details <small className="text-secondary">(Auto-fills on invoices)</small></h3>
-                        <div className="grid-3">
-                            <div className="form-group">
-                                <label>Account Number</label>
-                                <input type="text" name="bankAccountNo" value={bankAccountNo} onChange={onChange} placeholder="Account No" />
+                        <div className="card bg-light my-2">
+                            <h3>Bank Details <small className="text-secondary">(Auto-fills on invoices)</small></h3>
+                            <div className="grid-3">
+                                <div className="form-group">
+                                    <label>Account Number</label>
+                                    <input type="text" name="bankAccountNo" value={bankAccountNo} onChange={onChange} placeholder="Account No" />
+                                </div>
+                                <div className="form-group">
+                                    <label>IFSC Code</label>
+                                    <input type="text" name="bankIfsc" value={bankIfsc} onChange={onChange} placeholder="Bank IFSC" />
+                                </div>
+                                <div className="form-group">
+                                    <label>UPI ID</label>
+                                    <input type="text" name="bankUpiId" value={bankUpiId} onChange={onChange} placeholder="yourname@bank" />
+                                </div>
                             </div>
-                            <div className="form-group">
-                                <label>IFSC Code</label>
-                                <input type="text" name="bankIfsc" value={bankIfsc} onChange={onChange} placeholder="Bank IFSC" />
-                            </div>
-                            <div className="form-group">
-                                <label>UPI ID</label>
-                                <input type="text" name="bankUpiId" value={bankUpiId} onChange={onChange} placeholder="yourname@bank" />
-                            </div>
+                            <br />
+                            <input type="submit" value={isSubmittingProfile ? "Saving..." : "Save Business Profile"} className="btn btn-primary" disabled={isSubmittingProfile} />
                         </div>
-                        <br />
-                        <input type="submit" value={isSubmittingProfile ? "Saving..." : "Save Business Profile"} className="btn btn-primary" disabled={isSubmittingProfile} />
+                    </form>
+                    <div className="card bg-light my-2" style={{ borderLeft: '4px solid var(--danger-color)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                                <h3 style={{ color: 'var(--danger-color)', margin: 0 }}>Account Session</h3>
+                                <p style={{ fontSize: '0.9rem', color: '#666', margin: '5px 0 0 0' }}>Log out of your account on this device.</p>
+                            </div>
+                            <button type="button" onClick={() => logout()} className="btn btn-danger" style={{ display: 'flex', alignItems: 'center' }}>
+                                <i className="fas fa-sign-out-alt" style={{ marginRight: '8px' }}></i> Logout
+                            </button>
+                        </div>
                     </div>
-                </form>
+                </>
             )}
 
             {activeTab === 'invoice' && (
