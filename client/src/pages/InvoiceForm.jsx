@@ -179,6 +179,12 @@ const InvoiceForm = () => {
             navigate('/');
         } catch (err) {
             console.error(err);
+            if (err.response && err.response.status === 403) {
+                alert(err.response.data.msg);
+                navigate('/billing');
+            } else {
+                alert('An error occurred. Please try again.');
+            }
         } finally {
             setIsSubmitting(false);
         }

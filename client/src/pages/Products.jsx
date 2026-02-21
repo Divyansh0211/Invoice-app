@@ -21,9 +21,13 @@ const Products = () => {
 
     const { name, description, price, productClass, quantity } = formData;
 
+    const activeWorkspaceId = user?.activeWorkspace?._id || user?.activeWorkspace;
+    const userRole = user?.workspaces?.find(w => w.workspace === activeWorkspaceId || w.workspace?._id === activeWorkspaceId)?.role || 'Staff';
+    const isPrivileged = userRole === 'Owner' || userRole === 'Admin';
+
     useEffect(() => {
         getProducts();
-    }, []);
+    }, [user?.activeWorkspace]);
 
     const getProducts = async () => {
         try {
@@ -80,53 +84,62 @@ const Products = () => {
     return (
         <div className="grid-2">
             <div>
-                <div className="card">
-                    <h3>Manage Product Classes</h3>
-                    <form onSubmit={handleAddClass}>
-                        <div className="form-group">
-                            <label>New Class Name</label>
-                            <input
-                                type="text"
-                                value={newClass}
-                                onChange={(e) => setNewClass(e.target.value)}
-                                placeholder="e.g. Electronics"
-                            />
-                        </div>
-                        <input type="submit" value={isAddingClass ? "Adding..." : "Add Class"} className="btn btn-dark btn-block" disabled={isAddingClass} />
-                    </form>
+                {isPrivileged ? (
+                    <>
+                        <div className="card">
+                            <h3>Manage Product Classes</h3>
+                            <form onSubmit={handleAddClass}>
+                                <div className="form-group">
+                                    <label>New Class Name</label>
+                                    <input
+                                        type="text"
+                                        value={newClass}
+                                        onChange={(e) => setNewClass(e.target.value)}
+                                        placeholder="e.g. Electronics"
+                                    />
+                                </div>
+                                <input type="submit" value={isAddingClass ? "Adding..." : "Add Class"} className="btn btn-dark btn-block" disabled={isAddingClass} />
+                            </form>
 
-                </div>
-                <div className="card">
-                    <h3>Add Product</h3>
-                    <form onSubmit={onSubmit}>
-                        <div className="form-group">
-                            <label>Product Name</label>
-                            <input type="text" name="name" value={name} onChange={onChange} required />
                         </div>
-                        <div className="form-group">
-                            <label>Classification</label>
-                            <select name="productClass" value={productClass} onChange={onChange}>
-                                <option value="">Select Class</option>
-                                {user && user.productClasses && user.productClasses.map((cls, index) => (
-                                    <option key={index} value={cls}>{cls}</option>
-                                ))}
-                            </select>
+                        <div className="card">
+                            <h3>Add Product</h3>
+                            <form onSubmit={onSubmit}>
+                                <div className="form-group">
+                                    <label>Product Name</label>
+                                    <input type="text" name="name" value={name} onChange={onChange} required />
+                                </div>
+                                <div className="form-group">
+                                    <label>Classification</label>
+                                    <select name="productClass" value={productClass} onChange={onChange}>
+                                        <option value="">Select Class</option>
+                                        {user && user.productClasses && user.productClasses.map((cls, index) => (
+                                            <option key={index} value={cls}>{cls}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Description</label>
+                                    <textarea name="description" value={description} onChange={onChange}></textarea>
+                                </div>
+                                <div className="form-group">
+                                    <label>Price</label>
+                                    <input type="number" name="price" value={price} onChange={onChange} required min="0" />
+                                </div>
+                                <div className="form-group">
+                                    <label>Stock Quantity</label>
+                                    <input type="number" name="quantity" value={quantity} onChange={onChange} required border="1px solid #ccc" />
+                                </div>
+                                <input type="submit" value={isSubmitting ? "Adding..." : "Add Product"} className="btn btn-primary btn-block" disabled={isSubmitting} />
+                            </form>
                         </div>
-                        <div className="form-group">
-                            <label>Description</label>
-                            <textarea name="description" value={description} onChange={onChange}></textarea>
-                        </div>
-                        <div className="form-group">
-                            <label>Price</label>
-                            <input type="number" name="price" value={price} onChange={onChange} required min="0" />
-                        </div>
-                        <div className="form-group">
-                            <label>Stock Quantity</label>
-                            <input type="number" name="quantity" value={quantity} onChange={onChange} required border="1px solid #ccc" />
-                        </div>
-                        <input type="submit" value={isSubmitting ? "Adding..." : "Add Product"} className="btn btn-primary btn-block" disabled={isSubmitting} />
-                    </form>
-                </div>
+                    </>
+                ) : (
+                    <div className="card">
+                        <h3>View Products</h3>
+                        <p>Only Admins or Owners can add new products or product classes.</p>
+                    </div>
+                )}
             </div>
             <div>
                 <h3>Products List</h3>
@@ -137,7 +150,7 @@ const Products = () => {
                         <p>{product.description}</p>
                         <p className="text-primary">${product.price}</p>
                         <p><strong>Stock:</strong> {product.quantity}</p>
-                        <button onClick={() => deleteProduct(product._id)} className="btn btn-danger btn-sm">Delete</button>
+                        {isPrivileged && <button onClick={() => deleteProduct(product._id)} className="btn btn-danger btn-sm">Delete</button>}
                     </div>
                 ))}
             </div>

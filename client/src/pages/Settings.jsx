@@ -3,7 +3,7 @@ import AuthContext from '../context/authContext';
 
 const Settings = () => {
     const authContext = useContext(AuthContext);
-    const { user, updateProfile, changePassword, generate2FA, verify2FA, disable2FA } = authContext;
+    const { user, updateProfile, changePassword, generate2FA, verify2FA, disable2FA, switchWorkspace } = authContext;
 
     const [activeTab, setActiveTab] = useState('profile');
     const [isSubmittingProfile, setIsSubmittingProfile] = useState(false);
@@ -219,6 +219,36 @@ const Settings = () => {
 
             {activeTab === 'profile' && (
                 <form className="form" onSubmit={onSubmitProfile}>
+                    <div className="card bg-light my-2">
+                        <h3>Workspace Switching</h3>
+                        <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '15px' }}>
+                            You can belong to multiple workspaces (e.g., your own personal workspace plus teams you've joined).
+                        </p>
+                        <div className="grid-2">
+                            <div className="form-group">
+                                <label>Current Active Workspace</label>
+                                <select
+                                    className="form-control"
+                                    value={user?.activeWorkspace?._id || user?.activeWorkspace || ''}
+                                    onChange={(e) => {
+                                        if (e.target.value !== user?.activeWorkspace?._id) {
+                                            switchWorkspace(e.target.value);
+                                        }
+                                    }}
+                                >
+                                    {user?.workspaces?.map((w, idx) => (
+                                        <option key={w.workspace._id || w.workspace || idx} value={w.workspace._id || w.workspace}>
+                                            Workspace {w.workspace._id || w.workspace} (Role: {w.role})
+                                        </option>
+                                    ))}
+                                </select>
+                                <small style={{ display: 'block', marginTop: '5px', color: 'var(--primary-color)' }}>
+                                    <strong>Note:</strong> Currently displaying workspace ID until we populate names.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="card bg-light">
                         <h3>Company Information</h3>
                         <div className="grid-2">

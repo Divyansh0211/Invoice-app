@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
+const checkRole = require('../middleware/checkRole');
 const Staff = require('../models/Staff');
 const nodemailer = require('nodemailer'); // Reusing nodemailer
 
@@ -11,7 +12,7 @@ router.get('/', auth, async (req, res) => {
     try {
         // Find staff created by specific user or all staff? Usually staff is org-wide or per user. 
         // Assuming per user for now based on auth middleware usage in other routes
-        const staff = await Staff.find({ user: req.user.id }).sort({ createdAt: -1 });
+        const staff = await Staff.find({ workspace: req.workspaceId }).sort({ createdAt: -1 });
         res.json(staff);
     } catch (err) {
         console.error(err.message);
@@ -21,8 +22,8 @@ router.get('/', auth, async (req, res) => {
 
 // @route   POST api/staff
 // @desc    Add new staff
-// @access  Private
-router.post('/', auth, async (req, res) => {
+// @access  Private (Owner/Admin)
+router.post('/', [auth, checkRole(['Owner', 'Admin'])], async (req, res) => {
     const { name, email, role } = req.body;
 
     try {
@@ -30,7 +31,8 @@ router.post('/', auth, async (req, res) => {
             name,
             email,
             role,
-            user: req.user.id
+            user: req.user.id,
+            workspace: req.workspaceId
         });
 
         const staff = await newStaff.save();
@@ -43,15 +45,15 @@ router.post('/', auth, async (req, res) => {
 
 // @route   DELETE api/staff/:id
 // @desc    Delete staff
-// @access  Private
-router.delete('/:id', auth, async (req, res) => {
+// @access  Private (Owner/Admin)
+router.delete('/:id', [auth, checkRole(['Owner', 'Admin'])], async (req, res) => {
     try {
         let staff = await Staff.findById(req.params.id);
 
         if (!staff) return res.status(404).json({ msg: 'Staff not found' });
 
-        // Make sure user owns contact
-        if (staff.user.toString() !== req.user.id) {
+        // Make sure user owns workspace staff
+        if (staff.workspace.toString() !== req.workspaceId.toString() && staff.user.toString() !== req.user.id) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
 
@@ -66,8 +68,8 @@ router.delete('/:id', auth, async (req, res) => {
 
 // @route   POST api/staff/send-email
 // @desc    Send email to staff
-// @access  Private
-router.post('/send-email', auth, async (req, res) => {
+// @access  Private (Owner/Admin)
+router.post('/send-email', [auth, checkRole(['Owner', 'Admin'])], async (req, res) => {
     const { subject, message, recipients } = req.body;
 
     if (!recipients || recipients.length === 0) {

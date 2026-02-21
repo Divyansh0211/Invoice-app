@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
+const checkRole = require('../middleware/checkRole');
 const Product = require('../models/Product');
 
 // @route   GET api/products
@@ -8,7 +9,7 @@ const Product = require('../models/Product');
 // @access  Private
 router.get('/', auth, async (req, res) => {
     try {
-        const products = await Product.find({ user: req.user.id }).sort({ date: -1 });
+        const products = await Product.find({ workspace: req.workspaceId }).sort({ date: -1 });
         res.json(products);
     } catch (err) {
         console.error(err.message);
@@ -18,8 +19,8 @@ router.get('/', auth, async (req, res) => {
 
 // @route   POST api/products
 // @desc    Add new product
-// @access  Private
-router.post('/', auth, async (req, res) => {
+// @access  Private (Owner/Admin)
+router.post('/', [auth, checkRole(['Owner', 'Admin'])], async (req, res) => {
     const { name, description, price, productClass, quantity } = req.body;
 
     try {
@@ -29,7 +30,8 @@ router.post('/', auth, async (req, res) => {
             price,
             productClass,
             quantity,
-            user: req.user.id
+            user: req.user.id,
+            workspace: req.workspaceId
         });
 
         const product = await newProduct.save();
@@ -42,8 +44,8 @@ router.post('/', auth, async (req, res) => {
 
 // @route   PUT api/products/:id
 // @desc    Update product
-// @access  Private
-router.put('/:id', auth, async (req, res) => {
+// @access  Private (Owner/Admin)
+router.put('/:id', [auth, checkRole(['Owner', 'Admin'])], async (req, res) => {
     const { name, description, price, productClass, quantity } = req.body;
 
     // Build product object
@@ -59,8 +61,8 @@ router.put('/:id', auth, async (req, res) => {
 
         if (!product) return res.status(404).json({ msg: 'Product not found' });
 
-        // Make sure user owns product
-        if (product.user.toString() !== req.user.id) {
+        // Make sure user owns product in workspace
+        if (product.workspace.toString() !== req.workspaceId.toString()) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
 
@@ -79,15 +81,15 @@ router.put('/:id', auth, async (req, res) => {
 
 // @route   DELETE api/products/:id
 // @desc    Delete product
-// @access  Private
-router.delete('/:id', auth, async (req, res) => {
+// @access  Private (Owner/Admin)
+router.delete('/:id', [auth, checkRole(['Owner', 'Admin'])], async (req, res) => {
     try {
         let product = await Product.findById(req.params.id);
 
         if (!product) return res.status(404).json({ msg: 'Product not found' });
 
-        // Make sure user owns product
-        if (product.user.toString() !== req.user.id) {
+        // Make sure user owns product in workspace
+        if (product.workspace.toString() !== req.workspaceId.toString()) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
 

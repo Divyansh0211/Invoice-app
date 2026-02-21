@@ -25,6 +25,7 @@ const authReducer = (state, action) => {
                 isAuthenticated: false,
                 loading: false,
                 user: null,
+                activeWorkspace: null,
                 error: action.payload
             };
         case 'CLEAR_ERRORS':
@@ -37,7 +38,8 @@ const authReducer = (state, action) => {
                 ...state,
                 isAuthenticated: true,
                 loading: false,
-                user: action.payload
+                user: action.payload,
+                activeWorkspace: action.payload.activeWorkspace
             };
         default:
             return state;
@@ -50,6 +52,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated: null,
         loading: true,
         user: null,
+        activeWorkspace: null,
         error: null
     };
 
@@ -187,19 +190,14 @@ export const AuthProvider = ({ children }) => {
 
         try {
             const res = await axios.put('/api/auth/profile', formData, config);
-
             dispatch({
                 type: 'USER_LOADED',
                 payload: res.data
             });
-
             return { success: true };
         } catch (err) {
-            dispatch({
-                type: 'AUTH_ERROR',
-                payload: err.response && err.response.data && err.response.data.msg ? err.response.data.msg : 'Update failed'
-            });
-            return { success: false };
+            dispatch({ type: 'AUTH_ERROR' });
+            return { success: false, msg: err.response?.data?.msg || 'Profile update failed' };
         }
     };
 
@@ -219,6 +217,33 @@ export const AuthProvider = ({ children }) => {
                 success: false,
                 msg: err.response && err.response.data && err.response.data.msg ? err.response.data.msg : 'Request failed'
             };
+        }
+    };
+
+    // Switch Workspace
+    const switchWorkspace = async workspaceId => {
+        const config = {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        };
+
+        try {
+            const res = await axios.post('/api/auth/change-workspace', { workspaceId }, config);
+
+            // The backend returns the updated user object with the newly populated activeWorkspace
+            dispatch({
+                type: 'USER_LOADED',
+                payload: res.data
+            });
+
+            return { success: true };
+        } catch (err) {
+            dispatch({
+                type: 'AUTH_ERROR',
+                payload: err.response?.data?.msg || 'Failed to switch workspace'
+            });
+            return { success: false, msg: err.response?.data?.msg || 'Failed to switch workspace' };
         }
     };
 
@@ -332,6 +357,7 @@ export const AuthProvider = ({ children }) => {
                 isAuthenticated: state.isAuthenticated,
                 loading: state.loading,
                 user: state.user,
+                activeWorkspace: state.activeWorkspace,
                 error: state.error,
                 register,
                 login,
@@ -346,7 +372,8 @@ export const AuthProvider = ({ children }) => {
                 changePassword,
                 generate2FA,
                 verify2FA,
-                disable2FA
+                disable2FA,
+                switchWorkspace
             }}
         >
             {children}

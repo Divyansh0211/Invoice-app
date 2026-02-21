@@ -58,6 +58,11 @@ const Sidebar = () => {
                     </Link>
                 </li>
                 <li>
+                    <Link to="/billing" className={isActive('/billing')}>
+                        <i className="fas fa-credit-card"></i> Billing
+                    </Link>
+                </li>
+                <li>
                     <Link to="/settings" className={isActive('/settings')}>
                         <i className="fas fa-cog"></i> Settings
                     </Link>

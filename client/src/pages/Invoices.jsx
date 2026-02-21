@@ -15,7 +15,7 @@ const Invoices = () => {
         if (isAuthenticated) {
             getInvoices();
         }
-    }, [isAuthenticated]);
+    }, [isAuthenticated, authContext.user?.activeWorkspace]);
 
     const getInvoices = async () => {
         try {

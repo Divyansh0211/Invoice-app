@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
+const checkRole = require('../middleware/checkRole');
 const Customer = require('../models/Customer');
 
 // @route   GET api/customers
@@ -8,7 +9,7 @@ const Customer = require('../models/Customer');
 // @access  Private
 router.get('/', auth, async (req, res) => {
     try {
-        const customers = await Customer.find({ user: req.user.id }).sort({ date: -1 });
+        const customers = await Customer.find({ workspace: req.workspaceId }).sort({ date: -1 });
         res.json(customers);
     } catch (err) {
         console.error(err.message);
@@ -18,8 +19,8 @@ router.get('/', auth, async (req, res) => {
 
 // @route   POST api/customers
 // @desc    Add new customer
-// @access  Private
-router.post('/', auth, async (req, res) => {
+// @access  Private (Owner/Admin)
+router.post('/', [auth, checkRole(['Owner', 'Admin'])], async (req, res) => {
     const { name, email, gst, address } = req.body;
 
     try {
@@ -28,7 +29,8 @@ router.post('/', auth, async (req, res) => {
             email,
             gst,
             address,
-            user: req.user.id
+            user: req.user.id,
+            workspace: req.workspaceId
         });
 
         const customer = await newCustomer.save();
@@ -41,8 +43,8 @@ router.post('/', auth, async (req, res) => {
 
 // @route   PUT api/customers/:id
 // @desc    Update customer
-// @access  Private
-router.put('/:id', auth, async (req, res) => {
+// @access  Private (Owner/Admin)
+router.put('/:id', [auth, checkRole(['Owner', 'Admin'])], async (req, res) => {
     const { name, email, gst, address } = req.body;
 
     // Build customer object
@@ -57,8 +59,8 @@ router.put('/:id', auth, async (req, res) => {
 
         if (!customer) return res.status(404).json({ msg: 'Customer not found' });
 
-        // Make sure user owns customer
-        if (customer.user.toString() !== req.user.id) {
+        // Make sure user owns customer in workspace
+        if (customer.workspace.toString() !== req.workspaceId.toString()) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
 
@@ -77,15 +79,15 @@ router.put('/:id', auth, async (req, res) => {
 
 // @route   DELETE api/customers/:id
 // @desc    Delete customer
-// @access  Private
-router.delete('/:id', auth, async (req, res) => {
+// @access  Private (Owner/Admin)
+router.delete('/:id', [auth, checkRole(['Owner', 'Admin'])], async (req, res) => {
     try {
         let customer = await Customer.findById(req.params.id);
 
         if (!customer) return res.status(404).json({ msg: 'Customer not found' });
 
-        // Make sure user owns customer
-        if (customer.user.toString() !== req.user.id) {
+        // Make sure user owns customer in workspace
+        if (customer.workspace.toString() !== req.workspaceId.toString()) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
 

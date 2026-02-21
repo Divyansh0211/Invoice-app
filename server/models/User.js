@@ -115,6 +115,23 @@ const UserSchema = new mongoose.Schema({
     isTwoFactorEnabled: {
         type: Boolean,
         default: false
+    },
+    workspaces: [
+        {
+            workspace: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Workspace'
+            },
+            role: {
+                type: String,
+                enum: ['Owner', 'Admin', 'Staff'],
+                default: 'Staff'
+            }
+        }
+    ],
+    activeWorkspace: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Workspace'
     }
 });
 

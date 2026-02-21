@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
+import AuthContext from '../context/authContext';
+import { useContext } from 'react';
+
 const Customers = () => {
+    const authContext = useContext(AuthContext);
+    const { user } = authContext;
     const [customers, setCustomers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -15,6 +20,10 @@ const Customers = () => {
 
     const { name, email, gst, address } = formData;
 
+    const activeWorkspaceId = user?.activeWorkspace?._id || user?.activeWorkspace;
+    const userRole = user?.workspaces?.find(w => w.workspace === activeWorkspaceId || w.workspace?._id === activeWorkspaceId)?.role || 'Staff';
+    const isPrivileged = userRole === 'Owner' || userRole === 'Admin';
+
     const getCustomers = async () => {
         try {
             const res = await axios.get('/api/customers');
@@ -24,6 +33,10 @@ const Customers = () => {
             console.error(err);
         }
     };
+
+    useEffect(() => {
+        getCustomers();
+    }, [user?.activeWorkspace]);
 
     const exportToCSV = () => {
         if (customers.length === 0) return;
@@ -81,28 +94,35 @@ const Customers = () => {
     return (
         <div className="grid-2">
             <div>
-                <div className="card">
-                    <h3>Add Customer</h3>
-                    <form onSubmit={onSubmit}>
-                        <div className="form-group">
-                            <label>Name</label>
-                            <input type="text" name="name" value={name} onChange={onChange} required />
-                        </div>
-                        <div className="form-group">
-                            <label>Email</label>
-                            <input type="email" name="email" value={email} onChange={onChange} required />
-                        </div>
-                        <div className="form-group">
-                            <label>GSTIN</label>
-                            <input type="text" name="gst" value={gst} onChange={onChange} />
-                        </div>
-                        <div className="form-group">
-                            <label>Address</label>
-                            <input type="text" name="address" value={address} onChange={onChange} />
-                        </div>
-                        <input type="submit" value={isSubmitting ? "Adding..." : "Add Customer"} className="btn btn-primary btn-block" disabled={isSubmitting} />
-                    </form>
-                </div>
+                {isPrivileged ? (
+                    <div className="card">
+                        <h3>Add Customer</h3>
+                        <form onSubmit={onSubmit}>
+                            <div className="form-group">
+                                <label>Name</label>
+                                <input type="text" name="name" value={name} onChange={onChange} required />
+                            </div>
+                            <div className="form-group">
+                                <label>Email</label>
+                                <input type="email" name="email" value={email} onChange={onChange} required />
+                            </div>
+                            <div className="form-group">
+                                <label>GSTIN</label>
+                                <input type="text" name="gst" value={gst} onChange={onChange} />
+                            </div>
+                            <div className="form-group">
+                                <label>Address</label>
+                                <input type="text" name="address" value={address} onChange={onChange} />
+                            </div>
+                            <input type="submit" value={isSubmitting ? "Adding..." : "Add Customer"} className="btn btn-primary btn-block" disabled={isSubmitting} />
+                        </form>
+                    </div>
+                ) : (
+                    <div className="card">
+                        <h3>View Customers</h3>
+                        <p>Only Admins or Owners can add new customers.</p>
+                    </div>
+                )}
             </div>
             <div>
                 <h3>Customers List</h3>
@@ -132,7 +152,7 @@ const Customers = () => {
                                 <h4>{customer.name}</h4>
                                 <p>{customer.email}</p>
                                 {customer.gst && <p>GST: {customer.gst}</p>}
-                                <button onClick={() => deleteCustomer(customer._id)} className="btn btn-danger btn-sm">Delete</button>
+                                {isPrivileged && <button onClick={() => deleteCustomer(customer._id)} className="btn btn-danger btn-sm">Delete</button>}
                             </div>
                         ))}
                         {customers.length === 0 && <p>No customers found.</p>}

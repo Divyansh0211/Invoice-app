@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import axios from 'axios';
+import AuthContext from '../context/authContext';
 
 const Staff = () => {
+    const authContext = useContext(AuthContext);
     const [staffList, setStaffList] = React.useState([]);
     const [formData, setFormData] = React.useState({
         name: '',
@@ -13,6 +15,10 @@ const Staff = () => {
     const [isSubmitting, setIsSubmitting] = React.useState(false);
 
     const { name, email, role } = formData;
+
+    const activeWorkspaceId = authContext.user?.activeWorkspace?._id || authContext.user?.activeWorkspace;
+    const userRole = authContext.user?.workspaces?.find(w => w.workspace === activeWorkspaceId || w.workspace?._id === activeWorkspaceId)?.role || 'Staff';
+    const isPrivileged = userRole === 'Owner' || userRole === 'Admin';
 
     const fetchStaff = async () => {
         try {
@@ -27,7 +33,7 @@ const Staff = () => {
 
     React.useEffect(() => {
         fetchStaff();
-    }, []);
+    }, [authContext.user?.activeWorkspace]);
 
     const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -66,21 +72,23 @@ const Staff = () => {
             <h1 className="large text-primary">Staff Management</h1>
             <p className="lead"><i className="fas fa-user-tie"></i> Manage your team members</p>
 
-            <div className="card mb-2">
-                <h3>Add New Staff</h3>
-                <form className="form" onSubmit={onSubmit}>
-                    <div className="form-group">
-                        <input type="text" placeholder="Name" name="name" value={name} onChange={onChange} required />
-                    </div>
-                    <div className="form-group">
-                        <input type="email" placeholder="Email Address" name="email" value={email} onChange={onChange} required />
-                    </div>
-                    <div className="form-group">
-                        <input type="text" placeholder="Role (e.g. Manager, Developer)" name="role" value={role} onChange={onChange} />
-                    </div>
-                    <input type="submit" className="btn btn-primary" value={isSubmitting ? "Adding..." : "Add Staff"} disabled={isSubmitting} />
-                </form>
-            </div>
+            {isPrivileged && (
+                <div className="card mb-2">
+                    <h3>Add New Staff</h3>
+                    <form className="form" onSubmit={onSubmit}>
+                        <div className="form-group">
+                            <input type="text" placeholder="Name" name="name" value={name} onChange={onChange} required />
+                        </div>
+                        <div className="form-group">
+                            <input type="email" placeholder="Email Address" name="email" value={email} onChange={onChange} required />
+                        </div>
+                        <div className="form-group">
+                            <input type="text" placeholder="Role (e.g. Manager, Developer)" name="role" value={role} onChange={onChange} />
+                        </div>
+                        <input type="submit" className="btn btn-primary" value={isSubmitting ? "Adding..." : "Add Staff"} disabled={isSubmitting} />
+                    </form>
+                </div>
+            )}
 
             <div className="card">
                 <h3>Current Staff</h3>
@@ -91,7 +99,7 @@ const Staff = () => {
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th>Role</th>
-                                <th>Action</th>
+                                {isPrivileged && <th>Action</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -100,11 +108,13 @@ const Staff = () => {
                                     <td>{staff.name}</td>
                                     <td>{staff.email}</td>
                                     <td>{staff.role}</td>
-                                    <td>
-                                        <button className="btn btn-danger" onClick={() => handleDelete(staff._id)} style={{ padding: '5px 10px', fontSize: '0.8rem' }}>
-                                            <i className="fas fa-trash"></i>
-                                        </button>
-                                    </td>
+                                    {isPrivileged && (
+                                        <td>
+                                            <button className="btn btn-danger" onClick={() => handleDelete(staff._id)} style={{ padding: '5px 10px', fontSize: '0.8rem' }}>
+                                                <i className="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    )}
                                 </tr>
                             ))}
                             {staffList.length === 0 && <tr><td colSpan="4">No staff members found.</td></tr>}

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
+const checkRole = require('../middleware/checkRole');
 const Expense = require('../models/Expense');
 
 // @route   GET api/expenses
@@ -8,7 +9,7 @@ const Expense = require('../models/Expense');
 // @access  Private
 router.get('/', auth, async (req, res) => {
     try {
-        const expenses = await Expense.find({ user: req.user.id }).sort({ date: -1 });
+        const expenses = await Expense.find({ workspace: req.workspaceId }).sort({ date: -1 });
         res.json(expenses);
     } catch (err) {
         console.error(err.message);
@@ -18,8 +19,8 @@ router.get('/', auth, async (req, res) => {
 
 // @route   POST api/expenses
 // @desc    Add new expense
-// @access  Private
-router.post('/', auth, async (req, res) => {
+// @access  Private (Owner/Admin)
+router.post('/', [auth, checkRole(['Owner', 'Admin'])], async (req, res) => {
     const { amount, category, description, date } = req.body;
 
     try {
@@ -28,7 +29,8 @@ router.post('/', auth, async (req, res) => {
             category,
             description,
             date,
-            user: req.user.id
+            user: req.user.id,
+            workspace: req.workspaceId
         });
 
         const expense = await newExpense.save();
@@ -41,15 +43,15 @@ router.post('/', auth, async (req, res) => {
 
 // @route   DELETE api/expenses/:id
 // @desc    Delete expense
-// @access  Private
-router.delete('/:id', auth, async (req, res) => {
+// @access  Private (Owner/Admin)
+router.delete('/:id', [auth, checkRole(['Owner', 'Admin'])], async (req, res) => {
     try {
         let expense = await Expense.findById(req.params.id);
 
         if (!expense) return res.status(404).json({ msg: 'Expense not found' });
 
-        // Make sure user owns expense
-        if (expense.user.toString() !== req.user.id) {
+        // Make sure user owns workspace expense
+        if (expense.workspace.toString() !== req.workspaceId.toString()) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
 

@@ -164,8 +164,33 @@ router.post('/login', async (req, res) => {
 // @access  Private
 router.get('/user', require('../middleware/auth'), async (req, res) => {
     try {
-        const user = await User.findById(req.user.id).select('-password');
+        const user = await User.findById(req.user.id).select('-password').populate('activeWorkspace');
         res.json(user);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @route   POST api/auth/change-workspace
+// @desc    Change active workspace
+// @access  Private
+router.post('/change-workspace', require('../middleware/auth'), async (req, res) => {
+    const { workspaceId } = req.body;
+    try {
+        const user = await User.findById(req.user.id);
+
+        // Ensure user belongs to this workspace
+        const hasAccess = user.workspaces.some(w => w.workspace.toString() === workspaceId);
+        if (!hasAccess) {
+            return res.status(401).json({ msg: 'Not authorized for this workspace' });
+        }
+
+        user.activeWorkspace = workspaceId;
+        await user.save();
+
+        const updatedUser = await User.findById(req.user.id).select('-password').populate('activeWorkspace');
+        res.json(updatedUser);
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');

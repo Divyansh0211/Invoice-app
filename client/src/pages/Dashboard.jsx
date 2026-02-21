@@ -41,7 +41,7 @@ const Dashboard = () => {
         if (isAuthenticated) {
             getInvoices();
         }
-    }, [isAuthenticated]);
+    }, [isAuthenticated, user?.activeWorkspace]);
 
     const getInvoices = async () => {
         try {

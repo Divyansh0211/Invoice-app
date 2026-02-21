@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Invoice = require('../models/Invoice');
 const Product = require('../models/Product');
+const Workspace = require('../models/Workspace');
 
 // Middleware to verify token (Inline for now, should be separate)
 const auth = require('../middleware/auth'); // I need to create this
@@ -11,7 +12,7 @@ const auth = require('../middleware/auth'); // I need to create this
 // @access  Private
 router.get('/', auth, async (req, res) => {
     try {
-        const invoices = await Invoice.find({ user: req.user.id }).sort({ date: -1 });
+        const invoices = await Invoice.find({ workspace: req.workspaceId }).sort({ date: -1 });
         res.json(invoices);
     } catch (err) {
         console.error(err.message);
@@ -38,6 +39,17 @@ router.post('/', auth, async (req, res) => {
     const { clientName, clientEmail, businessName, businessGST, clientGST, items, gstRate, total, status, dueDate, currency, invoiceNumber, termsAndConditions, logoUrl, signatureUrl, bankDetails } = req.body;
 
     try {
+        // Enforce Free Tier Limits
+        const workspace = await Workspace.findById(req.workspaceId);
+        if (workspace && workspace.plan === 'Free') {
+            const invoiceCount = await Invoice.countDocuments({ workspace: req.workspaceId });
+            if (invoiceCount >= 5) {
+                return res.status(403).json({
+                    msg: 'Free plan limit reached (5 invoices). Please upgrade to Pro to create more invoices.'
+                });
+            }
+        }
+
         let finalInvoiceNumber = invoiceNumber;
         const userDoc = await require('../models/User').findById(req.user.id);
 
@@ -68,7 +80,8 @@ router.post('/', auth, async (req, res) => {
             logoUrl,
             signatureUrl,
             bankDetails,
-            user: req.user.id
+            user: req.user.id,
+            workspace: req.workspaceId
         });
 
         const invoice = await newInvoice.save();
@@ -190,8 +203,8 @@ router.put('/:id', auth, async (req, res) => {
 
         if (!invoice) return res.status(404).json({ msg: 'Invoice not found' });
 
-        // Make sure user owns invoice
-        if (invoice.user.toString() !== req.user.id) {
+        // Make sure user owns workspace invoice
+        if (invoice.workspace.toString() !== req.workspaceId.toString() && invoice.user.toString() !== req.user.id) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
 
@@ -217,8 +230,8 @@ router.delete('/:id', auth, async (req, res) => {
 
         if (!invoice) return res.status(404).json({ msg: 'Invoice not found' });
 
-        // Make sure user owns invoice
-        if (invoice.user.toString() !== req.user.id) {
+        // Make sure user owns workspace invoice
+        if (invoice.workspace.toString() !== req.workspaceId.toString() && invoice.user.toString() !== req.user.id) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
 
@@ -253,8 +266,8 @@ router.post('/:id/payments', auth, async (req, res) => {
 
         if (!invoice) return res.status(404).json({ msg: 'Invoice not found' });
 
-        // Make sure user owns invoice
-        if (invoice.user.toString() !== req.user.id) {
+        // Make sure user owns workspace invoice
+        if (invoice.workspace.toString() !== req.workspaceId.toString() && invoice.user.toString() !== req.user.id) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
 
@@ -346,8 +359,8 @@ router.post('/:id/send', auth, async (req, res) => {
 
         if (!invoice) return res.status(404).json({ msg: 'Invoice not found' });
 
-        // Make sure user owns invoice
-        if (invoice.user.toString() !== req.user.id) {
+        // Make sure user owns workspace invoice
+        if (invoice.workspace.toString() !== req.workspaceId.toString() && invoice.user.toString() !== req.user.id) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
 
@@ -430,8 +443,8 @@ router.post('/:id/remind', auth, async (req, res) => {
 
         if (!invoice) return res.status(404).json({ msg: 'Invoice not found' });
 
-        // Make sure user owns invoice
-        if (invoice.user.toString() !== req.user.id) {
+        // Make sure user owns workspace invoice
+        if (invoice.workspace.toString() !== req.workspaceId.toString() && invoice.user.toString() !== req.user.id) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
 
@@ -495,8 +508,8 @@ router.post('/:id/create-checkout-session', auth, async (req, res) => {
 
         if (!invoice) return res.status(404).json({ msg: 'Invoice not found' });
 
-        // Make sure user owns invoice
-        if (invoice.user.toString() !== req.user.id) {
+        // Make sure user owns workspace invoice
+        if (invoice.workspace.toString() !== req.workspaceId.toString() && invoice.user.toString() !== req.user.id) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
 

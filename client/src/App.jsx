@@ -21,6 +21,7 @@ import Sidebar from './components/Sidebar';
 import Settings from './pages/Settings';
 import PrivateRoute from './components/PrivateRoute';
 import ForgotPassword from './pages/ForgotPassword';
+import Billing from './pages/Billing';
 
 const MainLayout = () => {
   return (
@@ -80,6 +81,7 @@ const AppContent = () => {
             <Route path="/communication" element={<Communication />} />
             <Route path="/products" element={<Products />} />
             <Route path="/expenses" element={<Expenses />} />
+            <Route path="/billing" element={<Billing />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/settings" element={<Settings />} />
           </Route>

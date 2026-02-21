@@ -19,9 +19,13 @@ const Expenses = () => {
     const { amount, category, description, date } = formData;
     const currency = user?.settings?.currency || 'USD';
 
+    const activeWorkspaceId = user?.activeWorkspace?._id || user?.activeWorkspace;
+    const userRole = user?.workspaces?.find(w => w.workspace === activeWorkspaceId || w.workspace?._id === activeWorkspaceId)?.role || 'Staff';
+    const isPrivileged = userRole === 'Owner' || userRole === 'Admin';
+
     useEffect(() => {
         getExpenses();
-    }, []);
+    }, [user?.activeWorkspace]);
 
     const getExpenses = async () => {
         try {
@@ -69,36 +73,43 @@ const Expenses = () => {
     return (
         <div className="grid-2">
             <div>
-                <div className="card">
-                    <h3>Add New Expense</h3>
-                    <form onSubmit={onSubmit}>
-                        <div className="form-group">
-                            <label>Amount</label>
-                            <input type="number" name="amount" value={amount} onChange={onChange} required min="0.01" step="0.01" />
-                        </div>
-                        <div className="form-group">
-                            <label>Category</label>
-                            <select name="category" value={category} onChange={onChange} required>
-                                <option value="">Select Category</option>
-                                <option value="Rent">Rent</option>
-                                <option value="Utilities">Utilities</option>
-                                <option value="Salaries">Salaries</option>
-                                <option value="Supplies">Supplies</option>
-                                <option value="travel">Travel</option>
-                                <option value="Others">Others</option>
-                            </select>
-                        </div>
-                        <div className="form-group">
-                            <label>Date</label>
-                            <input type="date" name="date" value={date} onChange={onChange} required />
-                        </div>
-                        <div className="form-group">
-                            <label>Description</label>
-                            <textarea name="description" value={description} onChange={onChange}></textarea>
-                        </div>
-                        <input type="submit" value={isSubmitting ? "Adding..." : "Add Expense"} className="btn btn-primary btn-block" disabled={isSubmitting} />
-                    </form>
-                </div>
+                {isPrivileged ? (
+                    <div className="card">
+                        <h3>Add New Expense</h3>
+                        <form onSubmit={onSubmit}>
+                            <div className="form-group">
+                                <label>Amount</label>
+                                <input type="number" name="amount" value={amount} onChange={onChange} required min="0.01" step="0.01" />
+                            </div>
+                            <div className="form-group">
+                                <label>Category</label>
+                                <select name="category" value={category} onChange={onChange} required>
+                                    <option value="">Select Category</option>
+                                    <option value="Rent">Rent</option>
+                                    <option value="Utilities">Utilities</option>
+                                    <option value="Salaries">Salaries</option>
+                                    <option value="Supplies">Supplies</option>
+                                    <option value="travel">Travel</option>
+                                    <option value="Others">Others</option>
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Date</label>
+                                <input type="date" name="date" value={date} onChange={onChange} required />
+                            </div>
+                            <div className="form-group">
+                                <label>Description</label>
+                                <textarea name="description" value={description} onChange={onChange}></textarea>
+                            </div>
+                            <input type="submit" value={isSubmitting ? "Adding..." : "Add Expense"} className="btn btn-primary btn-block" disabled={isSubmitting} />
+                        </form>
+                    </div>
+                ) : (
+                    <div className="card">
+                        <h3>View Expenses</h3>
+                        <p>Only Admins or Owners can add new expenses.</p>
+                    </div>
+                )}
             </div>
 
             <div>
@@ -121,9 +132,11 @@ const Expenses = () => {
                                         <span className="text-danger" style={{ fontWeight: 'bold', display: 'block' }}>
                                             - {getCurrencySymbol(currency)} {expense.amount.toFixed(2)}
                                         </span>
-                                        <button onClick={() => deleteExpense(expense._id)} className="btn btn-danger btn-sm" style={{ marginTop: '5px' }}>
-                                            <i className="fas fa-trash"></i>
-                                        </button>
+                                        {isPrivileged && (
+                                            <button onClick={() => deleteExpense(expense._id)} className="btn btn-danger btn-sm" style={{ marginTop: '5px' }}>
+                                                <i className="fas fa-trash"></i>
+                                            </button>
+                                        )}
                                     </div>
                                 </li>
                             ))

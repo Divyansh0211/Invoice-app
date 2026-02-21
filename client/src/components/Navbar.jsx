@@ -11,12 +11,16 @@ const Navbar = () => {
     };
 
     const authLinks = (
-        <li className="nav-item flex align-center">
+        <li className="nav-item flex align-center" style={{ gap: '15px' }}>
+            <div className="workspace-badge" style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.2)', padding: '5px 10px', borderRadius: '5px', fontSize: '0.9rem' }}>
+                <i className="fas fa-building" style={{ marginRight: '8px' }}></i>
+                {authContext.activeWorkspace ? authContext.activeWorkspace.name : 'Personal Workspace'}
+            </div>
             <div className="user-info" style={{ display: 'flex', alignItems: 'center', fontWeight: '500', color: 'var(--text-main)' }}>
                 <i className="fas fa-user-circle" style={{ marginRight: '8px', fontSize: '1.2rem' }}></i>
                 {user && user.name}
             </div>
-            <span style={{ fontSize: '0.8rem', background: '#28a745', color: 'white', padding: '2px 5px', borderRadius: '5px', marginLeft: '5px' }}>
+            <span style={{ fontSize: '0.8rem', background: '#28a745', color: 'white', padding: '2px 5px', borderRadius: '5px' }}>
                 Cloud Synced <i className="fas fa-check-circle"></i>
             </span>
         </li>
