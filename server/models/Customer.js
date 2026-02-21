@@ -27,6 +27,12 @@ const CustomerSchema = new mongoose.Schema({
     date: {
         type: Date,
         default: Date.now
+    },
+    portalToken: {
+        type: String
+    },
+    portalTokenExpires: {
+        type: Date
     }
 });
 

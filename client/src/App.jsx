@@ -25,6 +25,8 @@ import Settings from './pages/Settings';
 import PrivateRoute from './components/PrivateRoute';
 import ForgotPassword from './pages/ForgotPassword';
 import Billing from './pages/Billing';
+import PortalLogin from './pages/PortalLogin';
+import PortalDashboard from './pages/PortalDashboard';
 
 const MainLayout = () => {
   return (
@@ -70,6 +72,11 @@ const AppContent = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+
+        {/* Client Portal Routes - No Layout */}
+        <Route path="/portal/login" element={<PortalLogin />} />
+        <Route path="/portal/verify/:token" element={<PortalLogin />} />
+        <Route path="/portal/dashboard" element={<PortalDashboard />} />
 
         {/* Protected Routes - Wrapped in PrivateRoute and MainLayout */}
         <Route element={<PrivateRoute />}>
