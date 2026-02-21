@@ -1,4 +1,4 @@
-# Invoice App (MERN Stack)
+# BillSphere (MERN Stack)
 
 A comprehensive Invoice Management Application built with the MERN stack (MongoDB, Express, React, Node.js). This application allows businesses to create, manage, and track invoices, customers, and products with ease.
 

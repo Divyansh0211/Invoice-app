@@ -240,7 +240,7 @@ const Dashboard = () => {
     if (!isAuthenticated) {
         return (
             <div className="landing">
-                <h1>Welcome to Invoice App</h1>
+                <h1>Welcome to BillSphere</h1>
                 <p>Manage your invoices with ease.</p>
                 <Link to="/login" className="btn btn-primary">Login</Link>
             </div>

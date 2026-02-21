@@ -17,7 +17,7 @@ const testEmail = async () => {
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: process.env.EMAIL_USER, // Send to self for testing
-            subject: 'Test Email from Invoice App Debugger',
+            subject: 'Test Email from BillSphere Debugger',
             html: '<h1>It works!</h1><p>This is a test email.</p>'
         };
 

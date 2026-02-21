@@ -40,7 +40,7 @@ const Navbar = () => {
     return (
         <div className="navbar bg-primary">
             <h1>
-                Invoice App
+                BillSphere
             </h1>
             <ul>{isAuthenticated ? authLinks : guestLinks}</ul>
         </div>
